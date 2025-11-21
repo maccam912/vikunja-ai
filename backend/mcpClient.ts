@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import process from "node:process";
 
 export interface MCPTool {
   name: string;
@@ -15,16 +16,16 @@ export class VikunjaMCPClient {
 
   constructor(
     private vikunjaUrl: string,
-    private vikunjaToken: string
+    private vikunjaToken: string,
   ) {}
 
   /**
    * Normalize Vikunja URL to ensure it includes /api/v1
    */
   private normalizeUrl(url: string): string {
-    let cleaned = url.trim().replace(/\/+$/, '');
+    let cleaned = url.trim().replace(/\/+$/, "");
     // Remove /api/v1 if it exists
-    if (cleaned.endsWith('/api/v1')) {
+    if (cleaned.endsWith("/api/v1")) {
       cleaned = cleaned.substring(0, cleaned.length - 7);
     }
     // Add /api/v1 back
@@ -62,7 +63,7 @@ export class VikunjaMCPClient {
         },
         {
           capabilities: {},
-        }
+        },
       );
 
       await this.client.connect(this.transport);
@@ -76,7 +77,9 @@ export class VikunjaMCPClient {
       }));
 
       this.connected = true;
-      console.log(`[MCP] Connected to Vikunja MCP server. Available tools: ${this.tools.length}`);
+      console.log(
+        `[MCP] Connected to Vikunja MCP server. Available tools: ${this.tools.length}`,
+      );
     } catch (error) {
       console.error("[MCP] Failed to connect:", error);
       throw new Error(`MCP connection failed: ${(error as Error).message}`);

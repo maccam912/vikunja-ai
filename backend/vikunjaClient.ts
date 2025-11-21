@@ -16,23 +16,26 @@ export interface VikunjaTask {
 export class VikunjaClient {
   constructor(
     private baseUrl: string,
-    private apiToken: string
+    private apiToken: string,
   ) {
     // Clean URL
-    this.baseUrl = baseUrl.replace(/\/+$/, '');
-    if (this.baseUrl.endsWith('/api/v1')) {
+    this.baseUrl = baseUrl.replace(/\/+$/, "");
+    if (this.baseUrl.endsWith("/api/v1")) {
       this.baseUrl = this.baseUrl.substring(0, this.baseUrl.length - 7);
     }
   }
 
-  private async request(endpoint: string, options: RequestInit = {}): Promise<any> {
+  private async request(
+    endpoint: string,
+    options: RequestInit = {},
+  ): Promise<any> {
     const url = `${this.baseUrl}/api/v1${endpoint}`;
 
     const response = await fetch(url, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${this.apiToken}`,
-        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${this.apiToken}`,
+        "Content-Type": "application/json",
         ...options.headers,
       },
     });
@@ -57,10 +60,12 @@ export class VikunjaClient {
     return tasks.map((task: any) => ({
       id: task.id,
       title: task.title,
-      description: task.description || '',
+      description: task.description || "",
       completed: task.done || false,
       priority: task.priority || 0,
-      dueDate: task.due_date && !task.due_date.startsWith('0001-01-01') ? task.due_date : undefined,
+      dueDate: task.due_date && !task.due_date.startsWith("0001-01-01")
+        ? task.due_date
+        : undefined,
       assignee: task.assignees?.[0]?.username || undefined,
       tags: (task.labels || []).map((label: any) => label.title || label),
       identifier: task.identifier,
@@ -74,24 +79,27 @@ export class VikunjaClient {
     due_date?: string;
   }): Promise<VikunjaTask> {
     return this.request(`/projects/${projectId}/tasks`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(task),
     });
   }
 
-  async updateTask(taskId: number, updates: Partial<VikunjaTask>): Promise<VikunjaTask> {
+  async updateTask(
+    taskId: number,
+    updates: Partial<VikunjaTask>,
+  ): Promise<VikunjaTask> {
     return this.request(`/tasks/${taskId}`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(updates),
     });
   }
 
   async deleteTask(taskId: number): Promise<void> {
-    await this.request(`/tasks/${taskId}`, { method: 'DELETE' });
+    await this.request(`/tasks/${taskId}`, { method: "DELETE" });
   }
 
   async getProjects() {
-    return this.request('/projects');
+    return this.request("/projects");
   }
 }
 
@@ -110,12 +118,12 @@ export function getVikunjaTools() {
           properties: {
             projectId: {
               type: "number",
-              description: "The project ID to list tasks from"
-            }
+              description: "The project ID to list tasks from",
+            },
           },
-          required: ["projectId"]
-        }
-      }
+          required: ["projectId"],
+        },
+      },
     },
     {
       type: "function",
@@ -127,30 +135,31 @@ export function getVikunjaTools() {
           properties: {
             projectId: {
               type: "number",
-              description: "The project ID to create the task in"
+              description: "The project ID to create the task in",
             },
             title: {
               type: "string",
-              description: "Task title"
+              description: "Task title",
             },
             description: {
               type: "string",
-              description: "Task description (optional)"
+              description: "Task description (optional)",
             },
             priority: {
               type: "number",
-              description: "Priority: 0=unset, 1=low, 2=medium, 3=high, 4=urgent, 5=do now",
+              description:
+                "Priority: 0=unset, 1=low, 2=medium, 3=high, 4=urgent, 5=do now",
               minimum: 0,
-              maximum: 5
+              maximum: 5,
             },
             due_date: {
               type: "string",
-              description: "Due date in ISO format (YYYY-MM-DD)"
-            }
+              description: "Due date in ISO format (YYYY-MM-DD)",
+            },
           },
-          required: ["projectId", "title"]
-        }
-      }
+          required: ["projectId", "title"],
+        },
+      },
     },
     {
       type: "function",
@@ -162,17 +171,17 @@ export function getVikunjaTools() {
           properties: {
             taskId: {
               type: "number",
-              description: "The task ID to update"
+              description: "The task ID to update",
             },
             title: { type: "string" },
             description: { type: "string" },
             done: { type: "boolean" },
             priority: { type: "number", minimum: 0, maximum: 5 },
-            due_date: { type: "string" }
+            due_date: { type: "string" },
           },
-          required: ["taskId"]
-        }
-      }
+          required: ["taskId"],
+        },
+      },
     },
     {
       type: "function",
@@ -184,12 +193,12 @@ export function getVikunjaTools() {
           properties: {
             taskId: {
               type: "number",
-              description: "The task ID to delete"
-            }
+              description: "The task ID to delete",
+            },
           },
-          required: ["taskId"]
-        }
-      }
-    }
+          required: ["taskId"],
+        },
+      },
+    },
   ];
 }

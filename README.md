@@ -1,6 +1,7 @@
 # Vikunja AI Assistant
 
-An AI-powered task management assistant for Vikunja, built with React, Deno, Hono, and OpenRouter.
+An AI-powered task management assistant for Vikunja, built with React, Deno,
+Hono, and OpenRouter.
 
 ## Architecture
 
@@ -19,7 +20,8 @@ Vikunja API
 - **Modern Full-Stack Architecture**: React frontend with Deno + Hono backend
 - **AI Provider Flexibility**: Uses OpenRouter for easy model switching
 - **MCP Integration**: Leverages Model Context Protocol for Vikunja operations
-- **Tool Calling**: AI can directly interact with Vikunja through function calling
+- **Tool Calling**: AI can directly interact with Vikunja through function
+  calling
 - **Mobile Responsive**: Works on desktop and mobile devices
 
 ## Prerequisites
@@ -66,11 +68,13 @@ PORT=8000
 You can switch models by changing `OPENROUTER_MODEL` in `.env`:
 
 **Recommended:**
+
 - `anthropic/claude-3.5-sonnet` - Best quality, excellent tool calling
 - `anthropic/claude-3-haiku` - Fast and cost-effective
 - `google/gemini-2.0-flash-exp` - Fast, may have free tier
 
 **Other Options:**
+
 - `openai/gpt-4o` - OpenAI's flagship model
 - `meta-llama/llama-3.1-70b-instruct` - Open source option
 - See [OpenRouter Models](https://openrouter.ai/models) for full list
@@ -78,6 +82,7 @@ You can switch models by changing `OPENROUTER_MODEL` in `.env`:
 ### 4. Vikunja Configuration
 
 You'll configure your Vikunja connection in the app's Settings modal:
+
 - **Vikunja URL**: Your instance URL (e.g., `https://vikunja.example.com`)
 - **API Token**: Generate from your Vikunja account settings
 - **Project**: Select which project to manage
@@ -87,16 +92,20 @@ You'll configure your Vikunja connection in the app's Settings modal:
 ### Running Locally
 
 **Terminal 1 - Backend:**
+
 ```bash
 deno task dev
 ```
+
 This starts the backend on `http://localhost:8000`
 
 **Terminal 2 - Frontend:**
+
 ```bash
 cd frontend
 npm run dev
 ```
+
 This starts the frontend on `http://localhost:3000`
 
 The frontend proxies API requests to the backend automatically.
@@ -156,7 +165,8 @@ docker run -p 8000:8000 --env-file .env vikunja-ai
 
 ## Usage
 
-1. **Configure Connection**: Open Settings and enter your Vikunja URL and API token
+1. **Configure Connection**: Open Settings and enter your Vikunja URL and API
+   token
 2. **Select Project**: Choose which Vikunja project to manage
 3. **Chat with AI**: Use natural language to manage tasks:
    - "Create a task called 'Write documentation'"
@@ -174,7 +184,10 @@ docker run -p 8000:8000 --env-file .env vikunja-ai
 
 ## MCP Server
 
-This project uses the [Vikunja MCP Server](https://github.com/democratize-technology/vikunja-mcp) to interact with Vikunja. The MCP server is automatically spawned by the backend and provides:
+This project uses the
+[Vikunja MCP Server](https://github.com/democratize-technology/vikunja-mcp) to
+interact with Vikunja. The MCP server is automatically spawned by the backend
+and provides:
 
 - Task management (CRUD operations)
 - Project management
@@ -185,16 +198,19 @@ This project uses the [Vikunja MCP Server](https://github.com/democratize-techno
 ## Troubleshooting
 
 ### "MCP connection failed"
+
 - Ensure `npx` is available (comes with Node.js)
 - Check Vikunja URL and API token are correct
 - Verify Vikunja API is accessible from your machine
 
 ### "OpenRouter API failed"
+
 - Verify `OPENROUTER_API_KEY` is set in `.env`
 - Check your OpenRouter account has credits
 - Try a different model (some models may have rate limits)
 
 ### Frontend can't connect to backend
+
 - Ensure backend is running on port 8000
 - Check Vite proxy config in `frontend/vite.config.ts`
 - Verify CORS is enabled in backend
@@ -210,9 +226,11 @@ MIT
 ## Credits
 
 Built with:
+
 - [Deno](https://deno.land/) - Modern JavaScript runtime
 - [Hono](https://hono.dev/) - Fast web framework
 - [React](https://react.dev/) - UI library
 - [OpenRouter](https://openrouter.ai/) - Unified LLM API
 - [Model Context Protocol](https://modelcontextprotocol.io/) - Tool integration
-- [Vikunja MCP Server](https://github.com/democratize-technology/vikunja-mcp) - Vikunja integration
+- [Vikunja MCP Server](https://github.com/democratize-technology/vikunja-mcp) -
+  Vikunja integration

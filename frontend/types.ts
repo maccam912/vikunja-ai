@@ -7,9 +7,9 @@ export enum TaskPriority {
 }
 
 export enum TaskStatus {
-  TODO = 'todo',
-  IN_PROGRESS = 'in_progress',
-  DONE = 'done',
+  TODO = "todo",
+  IN_PROGRESS = "in_progress",
+  DONE = "done",
 }
 
 export interface Task {
@@ -26,7 +26,7 @@ export interface Task {
 
 export interface Message {
   id: string;
-  role: 'user' | 'model';
+  role: "user" | "model";
   text: string;
   isToolOutput?: boolean;
 }

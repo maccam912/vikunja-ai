@@ -10,16 +10,21 @@ const app = new Hono();
 
 // Environment variables
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
-const OPENROUTER_MODEL = Deno.env.get("OPENROUTER_MODEL") || "anthropic/claude-3.5-sonnet";
+const OPENROUTER_MODEL = Deno.env.get("OPENROUTER_MODEL") ||
+  "anthropic/claude-3.5-sonnet";
 const PORT = parseInt(Deno.env.get("PORT") || "8000");
-const PHOENIX_ENDPOINT = Deno.env.get("PHOENIX_ENDPOINT") || "https://phoenix.rackspace.koski.co";
+const PHOENIX_ENDPOINT = Deno.env.get("PHOENIX_ENDPOINT") ||
+  "https://phoenix.rackspace.koski.co";
 const PHOENIX_API_KEY = Deno.env.get("PHOENIX_API_KEY");
 
 // Initialize Phoenix tracing
 try {
   initializePhoenix(PHOENIX_ENDPOINT, PHOENIX_API_KEY);
 } catch (error) {
-  console.error("[Phoenix] Failed to initialize, continuing without tracing:", error);
+  console.error(
+    "[Phoenix] Failed to initialize, continuing without tracing:",
+    error,
+  );
 }
 
 // Middleware
@@ -51,7 +56,9 @@ app.post("/api/chat", async (c) => {
     // Generate session ID if not provided
     const chatSessionId = sessionId || crypto.randomUUID();
 
-    console.log(`[API] Chat request received for project ${projectId}, session: ${chatSessionId}`);
+    console.log(
+      `[API] Chat request received for project ${projectId}, session: ${chatSessionId}`,
+    );
 
     // Initialize MCP client - this is what MCP is for!
     const mcpClient = new VikunjaMCPClient(vikunjaUrl, vikunjaToken);
@@ -62,12 +69,15 @@ app.post("/api/chat", async (c) => {
     console.log(`[API] MCP tools available: ${tools.length}`);
 
     // Initialize OpenRouter client
-    const openRouterClient = new OpenRouterClient(OPENROUTER_API_KEY, OPENROUTER_MODEL);
+    const openRouterClient = new OpenRouterClient(
+      OPENROUTER_API_KEY,
+      OPENROUTER_MODEL,
+    );
 
     // System prompt
     const systemPrompt = `You are a helpful Vikunja Task Manager assistant.
 You are connected to the user's Vikunja instance (Project ID: ${projectId}).
-Current Date: ${new Date().toISOString().split('T')[0]}.
+Current Date: ${new Date().toISOString().split("T")[0]}.
 
 You have access to Vikunja MCP tools. When using vikunja_tasks:
 - Always include the "subcommand" parameter (e.g., "list", "create", "update", "delete")
@@ -104,7 +114,7 @@ Be helpful, use the tools to accomplish the user's requests, and confirm when ac
       },
       systemPrompt,
       10, // Max 10 steps
-      chatSessionId // Pass session ID for Phoenix tracing
+      chatSessionId, // Pass session ID for Phoenix tracing
     );
 
     // Disconnect MCP client
@@ -119,7 +129,7 @@ Be helpful, use the tools to accomplish the user's requests, and confirm when ac
     console.error("[API] Chat error:", error);
     return c.json(
       { error: `Failed to process chat: ${(error as Error).message}` },
-      500
+      500,
     );
   }
 });
@@ -145,7 +155,7 @@ app.post("/api/tasks", async (c) => {
     console.error("[API] Tasks error:", error);
     return c.json(
       { error: `Failed to fetch tasks: ${(error as Error).message}` },
-      500
+      500,
     );
   }
 });
@@ -158,7 +168,9 @@ app.get("/*", serveStatic({ path: "../frontend/dist/index.html" }));
 
 console.log(`🚀 Server starting on http://localhost:${PORT}`);
 console.log(`📦 Model: ${OPENROUTER_MODEL}`);
-console.log(`🔧 OpenRouter API Key: ${OPENROUTER_API_KEY ? '✓ Configured' : '✗ Missing'}`);
+console.log(
+  `🔧 OpenRouter API Key: ${OPENROUTER_API_KEY ? "✓ Configured" : "✗ Missing"}`,
+);
 console.log(`📊 Phoenix Tracing: ${PHOENIX_ENDPOINT}`);
 
 Deno.serve({ port: PORT }, app.fetch);

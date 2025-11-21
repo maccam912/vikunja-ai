@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { trace, context, type Span } from "@opentelemetry/api";
+import { context, type Span, trace } from "@opentelemetry/api";
 import { SemanticConventions } from "@arizeai/openinference-semantic-conventions";
 import { setSession } from "@arizeai/openinference-core";
 
@@ -44,33 +44,47 @@ export class OpenRouterClient {
     messages: ChatMessage[],
     tools?: any[],
     systemPrompt?: string,
-    sessionId?: string
+    sessionId?: string,
   ): Promise<ChatCompletionResult> {
     // Wrap in session span if sessionId provided
     if (sessionId) {
       return this.tracer.startActiveSpan("chat", async (span: Span) => {
         try {
-          span.setAttribute(SemanticConventions.OPENINFERENCE_SPAN_KIND, "chain");
+          span.setAttribute(
+            SemanticConventions.OPENINFERENCE_SPAN_KIND,
+            "chain",
+          );
           span.setAttribute(SemanticConventions.SESSION_ID, sessionId);
 
           // Get the last user message as input
-          const lastUserMessage = messages.filter(m => m.role === "user").pop();
+          const lastUserMessage = messages.filter((m) => m.role === "user")
+            .pop();
           if (lastUserMessage) {
-            span.setAttribute(SemanticConventions.INPUT_VALUE, lastUserMessage.content);
+            span.setAttribute(
+              SemanticConventions.INPUT_VALUE,
+              lastUserMessage.content,
+            );
           }
 
           // Execute in session context
           return await context.with(
             setSession(context.active(), { sessionId }),
             async () => {
-              const result = await this._executeChatCompletion(messages, tools, systemPrompt);
+              const result = await this._executeChatCompletion(
+                messages,
+                tools,
+                systemPrompt,
+              );
 
               // Set output value
-              span.setAttribute(SemanticConventions.OUTPUT_VALUE, result.message);
+              span.setAttribute(
+                SemanticConventions.OUTPUT_VALUE,
+                result.message,
+              );
               span.end();
 
               return result;
-            }
+            },
           );
         } catch (error) {
           span.recordException(error as Error);
@@ -89,7 +103,7 @@ export class OpenRouterClient {
   private async _executeChatCompletion(
     messages: ChatMessage[],
     tools?: any[],
-    systemPrompt?: string
+    systemPrompt?: string,
   ): Promise<ChatCompletionResult> {
     try {
       // Add system prompt if provided
@@ -153,7 +167,7 @@ export class OpenRouterClient {
     toolExecutor: (name: string, args: any) => Promise<any>,
     systemPrompt?: string,
     maxSteps: number = 10,
-    sessionId?: string
+    sessionId?: string,
   ): Promise<{
     finalMessage: string;
     allToolCalls: Array<{ name: string; args: any; result: any }>;
@@ -171,7 +185,7 @@ export class OpenRouterClient {
         conversationHistory,
         tools,
         systemPrompt,
-        sessionId
+        sessionId,
       );
 
       // If no tool calls, we're done
@@ -191,10 +205,16 @@ export class OpenRouterClient {
 
       // Execute all tool calls
       for (const toolCall of result.toolCalls) {
-        console.log(`[OpenRouter] Executing tool: ${toolCall.name}`, toolCall.arguments);
+        console.log(
+          `[OpenRouter] Executing tool: ${toolCall.name}`,
+          toolCall.arguments,
+        );
 
         try {
-          const toolResult = await toolExecutor(toolCall.name, toolCall.arguments);
+          const toolResult = await toolExecutor(
+            toolCall.name,
+            toolCall.arguments,
+          );
 
           allToolCalls.push({
             name: toolCall.name,
@@ -205,13 +225,17 @@ export class OpenRouterClient {
           // Add tool result to conversation
           conversationHistory.push({
             role: "user",
-            content: `Tool ${toolCall.name} result: ${JSON.stringify(toolResult)}`,
+            content: `Tool ${toolCall.name} result: ${
+              JSON.stringify(toolResult)
+            }`,
           });
         } catch (error) {
           console.error(`[OpenRouter] Tool execution failed:`, error);
           conversationHistory.push({
             role: "user",
-            content: `Tool ${toolCall.name} failed: ${(error as Error).message}`,
+            content: `Tool ${toolCall.name} failed: ${
+              (error as Error).message
+            }`,
           });
         }
       }
@@ -219,7 +243,8 @@ export class OpenRouterClient {
 
     // Max steps reached
     return {
-      finalMessage: "I reached the maximum number of steps. Please try breaking down your request.",
+      finalMessage:
+        "I reached the maximum number of steps. Please try breaking down your request.",
       allToolCalls,
       conversationHistory,
     };
