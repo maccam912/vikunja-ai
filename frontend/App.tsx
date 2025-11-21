@@ -211,10 +211,12 @@ const App: React.FC = () => {
         onClose={() => setSelectedTask(null)}
       />
 
-      {/* Main Content Area (Tasks List)
+      {
+        /* Main Content Area (Tasks List)
           On mobile: Only visible if mobileView === 'tasks'
           On desktop: Always visible (flex-1)
-      */}
+      */
+      }
       <div
         className={`flex-1 flex flex-col min-w-0 overflow-hidden ${
           mobileView === "chat" ? "hidden lg:flex" : "flex"
@@ -275,7 +277,8 @@ const App: React.FC = () => {
                 />
               </svg>
             </button>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-vikunja-400 to-purple-500 border-2 border-white shadow-sm"></div>
+            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-vikunja-400 to-purple-500 border-2 border-white shadow-sm">
+            </div>
           </div>
         </header>
 
@@ -345,44 +348,48 @@ const App: React.FC = () => {
         {/* Task List */}
         <div className="flex-1 overflow-y-auto px-4 lg:px-6 pb-4 min-h-0">
           <div className="space-y-3 max-w-4xl pb-20 lg:pb-0">
-            {!config ? (
-              <div className="text-center py-20">
-                <p className="text-slate-500 mb-4">
-                  Please configure your Vikunja connection to see tasks.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="text-vikunja-600 font-medium hover:underline"
-                >
-                  Open Settings
-                </button>
-              </div>
-            ) : visibleTasks.length === 0 ? (
-              <div className="text-center py-20 text-slate-400">
-                <p>No tasks found in this view.</p>
-                <p className="text-sm mt-2">Ask the AI to create one!</p>
-              </div>
-            ) : (
-              visibleTasks
-                .sort((a, b) => {
-                  if (a.completed !== b.completed) {
-                    return a.completed ? 1 : -1;
-                  }
-                  if (a.priority !== b.priority) {
-                    return b.priority - a.priority;
-                  }
-                  return b.id - a.id;
-                })
-                .map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onToggle={handleTaskToggle}
-                    onSelect={setSelectedTask}
-                  />
-                ))
-            )}
+            {!config
+              ? (
+                <div className="text-center py-20">
+                  <p className="text-slate-500 mb-4">
+                    Please configure your Vikunja connection to see tasks.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="text-vikunja-600 font-medium hover:underline"
+                  >
+                    Open Settings
+                  </button>
+                </div>
+              )
+              : visibleTasks.length === 0
+              ? (
+                <div className="text-center py-20 text-slate-400">
+                  <p>No tasks found in this view.</p>
+                  <p className="text-sm mt-2">Ask the AI to create one!</p>
+                </div>
+              )
+              : (
+                visibleTasks
+                  .sort((a, b) => {
+                    if (a.completed !== b.completed) {
+                      return a.completed ? 1 : -1;
+                    }
+                    if (a.priority !== b.priority) {
+                      return b.priority - a.priority;
+                    }
+                    return b.id - a.id;
+                  })
+                  .map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onToggle={handleTaskToggle}
+                      onSelect={setSelectedTask}
+                    />
+                  ))
+              )}
           </div>
 
           {/* Completed tasks quick view */}
@@ -415,7 +422,7 @@ const App: React.FC = () => {
                 <div className="mt-3 space-y-3">
                   {completedTasks
                     .sort((a, b) =>
-                      (b.updated || "").localeCompare(a.updated || ""),
+                      (b.updated || "").localeCompare(a.updated || "")
                     )
                     .map((task) => (
                       <TaskCard
@@ -432,10 +439,12 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Chat Area
+      {
+        /* Chat Area
           On mobile: Only visible if mobileView === 'chat'
           On desktop: Always visible (width 400px)
-      */}
+      */
+      }
       <div
         className={`lg:w-[400px] border-l border-slate-200 bg-white flex-col ${
           mobileView === "chat"
