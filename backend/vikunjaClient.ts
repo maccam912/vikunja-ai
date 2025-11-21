@@ -13,6 +13,18 @@ export interface VikunjaTask {
   updated: string;
 }
 
+interface TaskRelation {
+  id: number;
+  task_id: number;
+  other_task_id: number;
+  relation_kind: string;
+  created_by: {
+    id: number;
+    username: string;
+  };
+  created: string;
+}
+
 interface RawVikunjaTask {
   id: number;
   title: string;
@@ -23,6 +35,8 @@ interface RawVikunjaTask {
   assignees?: Array<{ username?: string }>;
   labels?: Array<{ title?: string } | string>;
   identifier?: string;
+  related_tasks?: { [key: string]: TaskRelation[] };
+  updated?: string;
 }
 
 interface FormattedTask {
@@ -36,6 +50,7 @@ interface FormattedTask {
   tags: string[];
   identifier?: string;
   updated?: string;
+  relatedTasks?: TaskRelation[];
 }
 
 export class VikunjaClient {
@@ -51,6 +66,16 @@ export class VikunjaClient {
   }
 
   private formatTask(task: RawVikunjaTask): FormattedTask {
+    // Flatten related_tasks object into a single array
+    const relatedTasks: TaskRelation[] = [];
+    if (task.related_tasks) {
+      for (const relations of Object.values(task.related_tasks)) {
+        if (Array.isArray(relations)) {
+          relatedTasks.push(...relations);
+        }
+      }
+    }
+
     return {
       id: task.id,
       title: task.title,
@@ -66,6 +91,7 @@ export class VikunjaClient {
       ),
       identifier: task.identifier,
       updated: task.updated,
+      relatedTasks: relatedTasks.length > 0 ? relatedTasks : undefined,
     };
   }
 

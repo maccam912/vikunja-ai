@@ -12,6 +12,32 @@ export enum TaskStatus {
   DONE = "done",
 }
 
+export enum TaskRelationKind {
+  SUBTASK = "subtask",
+  PARENT_TASK = "parenttask",
+  RELATED = "related",
+  DUPLICATE_OF = "duplicateof",
+  DUPLICATES = "duplicates",
+  BLOCKING = "blocking",
+  BLOCKED = "blocked",
+  PRECEDES = "precedes",
+  FOLLOWS = "follows",
+  COPIED_FROM = "copiedfrom",
+  COPIED_TO = "copiedto",
+}
+
+export interface TaskRelation {
+  id: number;
+  task_id: number;
+  other_task_id: number;
+  relation_kind: TaskRelationKind | string;
+  created_by: {
+    id: number;
+    username: string;
+  };
+  created: string;
+}
+
 export interface Task {
   id: number;
   title: string;
@@ -23,6 +49,8 @@ export interface Task {
   tags: string[]; // Mapped from labels
   identifier?: string; // Vikunja identifier (e.g. "TASK-1")
   updated?: string;
+  relatedTasks?: TaskRelation[]; // All task relations
+  calculatedPriority?: number; // Custom calculated priority score
 }
 
 export interface Message {
