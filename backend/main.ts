@@ -11,11 +11,11 @@ const app = new Hono();
 
 // Environment variables
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
-const OPENROUTER_MODEL =
-  Deno.env.get("OPENROUTER_MODEL") || "anthropic/claude-3.5-sonnet";
+const OPENROUTER_MODEL = Deno.env.get("OPENROUTER_MODEL") ||
+  "anthropic/claude-3.5-sonnet";
 const PORT = parseInt(Deno.env.get("PORT") || "8000", 10);
-const PHOENIX_ENDPOINT =
-  Deno.env.get("PHOENIX_ENDPOINT") || "https://phoenix.rackspace.koski.co";
+const PHOENIX_ENDPOINT = Deno.env.get("PHOENIX_ENDPOINT") ||
+  "https://phoenix.rackspace.koski.co";
 const PHOENIX_API_KEY = Deno.env.get("PHOENIX_API_KEY");
 
 interface ChatRequestBody {

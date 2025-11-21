@@ -57,13 +57,12 @@ export class VikunjaClient {
       description: task.description || "",
       completed: task.done || false,
       priority: task.priority || 0,
-      dueDate:
-        task.due_date && !task.due_date.startsWith("0001-01-01")
-          ? task.due_date
-          : undefined,
+      dueDate: task.due_date && !task.due_date.startsWith("0001-01-01")
+        ? task.due_date
+        : undefined,
       assignee: task.assignees?.[0]?.username || undefined,
       tags: (task.labels || []).map((label) =>
-        typeof label === "string" ? label : label.title || String(label),
+        typeof label === "string" ? label : label.title || String(label)
       ),
       identifier: task.identifier,
       updated: task.updated,
