@@ -8,6 +8,9 @@ RUN npm run build
 FROM denoland/deno:alpine
 WORKDIR /app/backend
 
+# Install Node.js and npm (for npx)
+RUN apk add --no-cache nodejs npm
+
 # Copy Deno files
 COPY deno.json deno.lock ./
 COPY backend/ ./
