@@ -30,7 +30,12 @@ try {
 // Middleware
 app.use("/*", cors());
 
-// Health check endpoint
+// Simple health check - just returns 200
+app.get("/health", (c) => {
+  return c.text("OK", 200);
+});
+
+// Detailed health check endpoint
 app.get("/api/health", (c) => {
   return c.json({
     status: "ok",
