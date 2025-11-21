@@ -199,9 +199,9 @@ and provides:
 
 ### "MCP connection failed"
 
-- Ensure `npx` is available (comes with Node.js)
 - Check Vikunja URL and API token are correct
 - Verify Vikunja API is accessible from your machine
+- Ensure Deno can access npm packages (should work by default)
 
 ### "OpenRouter API failed"
 

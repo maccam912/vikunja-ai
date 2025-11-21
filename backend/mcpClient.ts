@@ -47,8 +47,8 @@ export class VikunjaMCPClient {
 
       // Create stdio transport for MCP server
       this.transport = new StdioClientTransport({
-        command: "npx",
-        args: ["-y", "@democratize-technology/vikunja-mcp"],
+        command: "deno",
+        args: ["run", "-A", "npm:@democratize-technology/vikunja-mcp"],
         env: {
           ...process.env,
           VIKUNJA_URL: normalizedUrl,

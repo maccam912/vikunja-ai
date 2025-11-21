@@ -5,11 +5,8 @@ RUN npm ci
 COPY frontend/ .
 RUN npm run build
 
-FROM denoland/deno:debian
+FROM denoland/deno:alpine
 WORKDIR /app/backend
-
-# Install Node.js and npm (for npx)
-RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
 
 # Copy Deno files
 COPY deno.json deno.lock ./
