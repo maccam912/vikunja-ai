@@ -20,6 +20,7 @@ interface RawVikunjaTask {
   done?: boolean;
   priority?: number;
   due_date?: string;
+  updated?: string;
   assignees?: Array<{ username?: string }>;
   labels?: Array<{ title?: string } | string>;
   identifier?: string;
