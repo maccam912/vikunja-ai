@@ -1,10 +1,15 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Message, Task, VikunjaConfig } from "./types";
 import { TaskCard } from "./components/TaskCard";
 import { Chat } from "./components/Chat";
 import { SettingsModal } from "./components/SettingsModal";
 import { TaskDetailsModal } from "./components/TaskDetailsModal";
 import * as apiClient from "./services/apiClient";
+import {
+  calculatePriorities,
+  getTopPriorityTask,
+  sortByPriority,
+} from "./utils/priorityCalculation";
 
 const App: React.FC = () => {
   // App State
@@ -56,7 +61,9 @@ const App: React.FC = () => {
         config.token,
         config.defaultProjectId,
       );
-      setTasks(fetchedTasks);
+      // Calculate custom priorities for all tasks
+      const tasksWithPriorities = calculatePriorities(fetchedTasks);
+      setTasks(tasksWithPriorities);
     } catch (error) {
       console.error("Failed to fetch Vikunja data:", error);
       setMessages((prev) => [
@@ -188,6 +195,9 @@ const App: React.FC = () => {
     }
   };
 
+  // Calculate priorities and get top task
+  const topPriorityTask = useMemo(() => getTopPriorityTask(tasks), [tasks]);
+
   // Filtering
   const completedTasks = tasks.filter((t) => t.completed);
   const visibleTasks = tasks.filter((t) => {
@@ -195,6 +205,12 @@ const App: React.FC = () => {
     if (filter === "completed") return t.completed;
     return true;
   });
+
+  // Sort tasks by calculated priority
+  const sortedVisibleTasks = useMemo(
+    () => sortByPriority(visibleTasks),
+    [visibleTasks],
+  );
 
   return (
     // Use h-[100dvh] to solve mobile browser address bar issues
@@ -209,6 +225,7 @@ const App: React.FC = () => {
       <TaskDetailsModal
         task={selectedTask}
         onClose={() => setSelectedTask(null)}
+        allTasks={tasks}
       />
 
       {
@@ -371,24 +388,48 @@ const App: React.FC = () => {
                 </div>
               )
               : (
-                visibleTasks
-                  .sort((a, b) => {
-                    if (a.completed !== b.completed) {
-                      return a.completed ? 1 : -1;
-                    }
-                    if (a.priority !== b.priority) {
-                      return b.priority - a.priority;
-                    }
-                    return b.id - a.id;
-                  })
-                  .map((task) => (
+                <>
+                  {/* Top Priority Task Highlight */}
+                  {topPriorityTask && filter === "active" && (
+                    <div className="mb-4 p-4 bg-gradient-to-r from-vikunja-50 to-purple-50 border-2 border-vikunja-300 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg
+                          className="w-5 h-5 text-vikunja-600"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <span className="text-sm font-semibold text-vikunja-700">
+                          Top Priority - Do This Next
+                        </span>
+                        {topPriorityTask.calculatedPriority && (
+                          <span className="ml-auto text-xs text-vikunja-600 font-mono">
+                            Score: {Math.round(topPriorityTask.calculatedPriority)}
+                          </span>
+                        )}
+                      </div>
+                      <TaskCard
+                        key={topPriorityTask.id}
+                        task={topPriorityTask}
+                        onToggle={handleTaskToggle}
+                        onSelect={setSelectedTask}
+                        allTasks={tasks}
+                      />
+                    </div>
+                  )}
+
+                  {/* All Tasks */}
+                  {sortedVisibleTasks.map((task) => (
                     <TaskCard
                       key={task.id}
                       task={task}
                       onToggle={handleTaskToggle}
                       onSelect={setSelectedTask}
+                      allTasks={tasks}
                     />
-                  ))
+                  ))}
+                </>
               )}
           </div>
 
