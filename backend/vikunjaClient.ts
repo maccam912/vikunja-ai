@@ -128,7 +128,7 @@ export class VikunjaClient {
     updates: Partial<VikunjaTask>,
   ): Promise<FormattedTask> {
     const updated = (await this.request(`/tasks/${taskId}`, {
-      method: "PUT",
+      method: "POST",
       body: JSON.stringify(updates),
     })) as RawVikunjaTask;
 
