@@ -43,7 +43,8 @@ const App: React.FC = () => {
     if (config) {
       refreshData();
     }
-  }, [config, refreshData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config]);
 
   const refreshData = useCallback(async () => {
     if (!config) return;

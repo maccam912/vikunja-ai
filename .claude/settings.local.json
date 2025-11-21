@@ -4,7 +4,8 @@
       "WebFetch(domain:github.com)",
       "WebSearch",
       "WebFetch(domain:www.npmjs.com)",
-      "WebFetch(domain:arize.com)"
+      "WebFetch(domain:arize.com)",
+      "Bash(docker build:*)"
     ],
     "deny": [],
     "ask": []
