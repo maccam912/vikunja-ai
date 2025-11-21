@@ -2,20 +2,41 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serveStatic } from "hono/deno";
 import { VikunjaMCPClient } from "./mcpClient.ts";
+import type { ChatMessage } from "./openrouterClient.ts";
 import { OpenRouterClient } from "./openrouterClient.ts";
-import { VikunjaClient } from "./vikunjaClient.ts";
+import { VikunjaClient, type VikunjaTask } from "./vikunjaClient.ts";
 import { initializePhoenix } from "./phoenix.ts";
 
 const app = new Hono();
 
 // Environment variables
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
-const OPENROUTER_MODEL = Deno.env.get("OPENROUTER_MODEL") ||
-  "anthropic/claude-3.5-sonnet";
-const PORT = parseInt(Deno.env.get("PORT") || "8000");
-const PHOENIX_ENDPOINT = Deno.env.get("PHOENIX_ENDPOINT") ||
-  "https://phoenix.rackspace.koski.co";
+const OPENROUTER_MODEL =
+  Deno.env.get("OPENROUTER_MODEL") || "anthropic/claude-3.5-sonnet";
+const PORT = parseInt(Deno.env.get("PORT") || "8000", 10);
+const PHOENIX_ENDPOINT =
+  Deno.env.get("PHOENIX_ENDPOINT") || "https://phoenix.rackspace.koski.co";
 const PHOENIX_API_KEY = Deno.env.get("PHOENIX_API_KEY");
+
+interface ChatRequestBody {
+  messages: ChatMessage[];
+  projectId: number;
+  vikunjaUrl: string;
+  vikunjaToken: string;
+  sessionId?: string;
+}
+
+interface TasksRequestBody {
+  vikunjaUrl: string;
+  vikunjaToken: string;
+  projectId: number;
+}
+
+interface UpdateTaskRequestBody {
+  vikunjaUrl: string;
+  vikunjaToken: string;
+  updates: Partial<VikunjaTask>;
+}
 
 // Initialize Phoenix tracing
 try {
@@ -47,7 +68,7 @@ app.get("/api/health", (c) => {
 // Chat endpoint - Handle AI conversations with tool calling
 app.post("/api/chat", async (c) => {
   try {
-    const body = await c.req.json();
+    const body = await c.req.json() as ChatRequestBody;
     const { messages, projectId, vikunjaUrl, vikunjaToken, sessionId } = body;
 
     if (!messages || !projectId || !vikunjaUrl || !vikunjaToken) {
@@ -147,7 +168,7 @@ Be helpful, use the tools to accomplish the user's requests, and confirm when ac
 // Tasks endpoint - Fetch tasks directly from Vikunja
 app.post("/api/tasks", async (c) => {
   try {
-    const body = await c.req.json();
+    const body = await c.req.json() as TasksRequestBody;
     const { vikunjaUrl, vikunjaToken, projectId } = body;
 
     if (!vikunjaUrl || !vikunjaToken || !projectId) {
@@ -165,6 +186,32 @@ app.post("/api/tasks", async (c) => {
     console.error("[API] Tasks error:", error);
     return c.json(
       { error: `Failed to fetch tasks: ${(error as Error).message}` },
+      500,
+    );
+  }
+});
+
+// Update a single task
+app.post("/api/tasks/:taskId", async (c) => {
+  try {
+    const body = await c.req.json() as UpdateTaskRequestBody;
+    const { vikunjaUrl, vikunjaToken, updates } = body;
+    const taskId = Number(c.req.param("taskId"));
+
+    if (!vikunjaUrl || !vikunjaToken || !taskId || !updates) {
+      return c.json({ error: "Missing required fields" }, 400);
+    }
+
+    console.log(`[API] Updating task ${taskId}`);
+
+    const vikunjaClient = new VikunjaClient(vikunjaUrl, vikunjaToken);
+    const updated = await vikunjaClient.updateTask(taskId, updates);
+
+    return c.json(updated);
+  } catch (error) {
+    console.error("[API] Task update error:", error);
+    return c.json(
+      { error: `Failed to update task: ${(error as Error).message}` },
       500,
     );
   }

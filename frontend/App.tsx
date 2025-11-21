@@ -16,6 +16,7 @@ const App: React.FC = () => {
   const [filter, setFilter] = useState<"all" | "active" | "completed">(
     "active",
   );
+  const [showCompletedList, setShowCompletedList] = useState(false);
 
   // Mobile View State
   const [mobileView, setMobileView] = useState<"tasks" | "chat">("tasks");
@@ -58,13 +59,16 @@ const App: React.FC = () => {
       setTasks(fetchedTasks);
     } catch (error) {
       console.error("Failed to fetch Vikunja data:", error);
-      setMessages((prev) => [...prev, {
-        id: Date.now().toString(),
-        role: "model",
-        text: `⚠️ Error connecting to Vikunja: ${
-          (error as Error).message
-        }. Please check your settings.`,
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "model",
+          text: `⚠️ Error connecting to Vikunja: ${
+            (error as Error).message
+          }. Please check your settings.`,
+        },
+      ]);
     } finally {
       setIsRefreshing(false);
     }
@@ -92,7 +96,7 @@ const App: React.FC = () => {
       // Convert messages to backend format
       const chatMessages: apiClient.ChatMessage[] = [
         ...messages.map((m) => ({
-          role: m.role === "user" ? "user" as const : "assistant" as const,
+          role: m.role === "user" ? ("user" as const) : ("assistant" as const),
           content: m.text,
         })),
         { role: "user" as const, content: text },
@@ -116,12 +120,15 @@ const App: React.FC = () => {
       // Show tool calls if any
       if (response.toolCalls && response.toolCalls.length > 0) {
         response.toolCalls.forEach((tc) => {
-          setMessages((prev) => [...prev, {
-            id: `tool-${Date.now()}-${Math.random()}`,
-            role: "model",
-            text: `🔧 ${tc.tool}: ${JSON.stringify(tc.args)}`,
-            isToolOutput: true,
-          }]);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `tool-${Date.now()}-${Math.random()}`,
+              role: "model",
+              text: `🔧 ${tc.tool}: ${JSON.stringify(tc.args)}`,
+              isToolOutput: true,
+            },
+          ]);
         });
       }
 
@@ -129,37 +136,60 @@ const App: React.FC = () => {
       await refreshData();
     } catch (error) {
       console.error("Backend Error:", error);
-      setMessages((prev) => [...prev, {
-        id: Date.now().toString(),
-        role: "model",
-        text: `Sorry, I encountered an error: ${(error as Error).message}`,
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "model",
+          text: `Sorry, I encountered an error: ${(error as Error).message}`,
+        },
+      ]);
     } finally {
       setIsLoading(false);
       setStatusMessage("");
     }
   };
 
-  const handleTaskToggle = (id: number) => {
+  const handleTaskToggle = async (id: number) => {
     if (!config) return;
     const task = tasks.find((t) => t.id === id);
-    if (task) {
-      // Optimistic update
-      const updatedLocal = { ...task, completed: !task.completed };
-      setTasks((prev) => prev.map((t) => t.id === id ? updatedLocal : t));
+    if (!task) return;
 
-      // Update selected task if it's the one being toggled
+    const updatedLocal = { ...task, completed: !task.completed };
+    setTasks((prev) => prev.map((t) => (t.id === id ? updatedLocal : t)));
+
+    if (selectedTask?.id === id) {
+      setSelectedTask(updatedLocal);
+    }
+
+    try {
+      const updated = await apiClient.updateTask(config.url, config.token, id, {
+        done: updatedLocal.completed,
+      });
+
+      setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)));
       if (selectedTask?.id === id) {
-        setSelectedTask(updatedLocal);
+        setSelectedTask(updated);
       }
-
-      // TODO: Add dedicated backend endpoint for quick task toggle
-      // For now, use the AI chat to toggle tasks
-      // Example: "Mark task 123 as complete"
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      setTasks((prev) => prev.map((t) => (t.id === id ? task : t)));
+      if (selectedTask?.id === id) {
+        setSelectedTask(task);
+      }
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "model",
+          text: `⚠️ Could not update task: ${(error as Error).message}`,
+        },
+      ]);
     }
   };
 
   // Filtering
+  const completedTasks = tasks.filter((t) => t.completed);
   const visibleTasks = tasks.filter((t) => {
     if (filter === "active") return !t.completed;
     if (filter === "completed") return t.completed;
@@ -181,12 +211,10 @@ const App: React.FC = () => {
         onClose={() => setSelectedTask(null)}
       />
 
-      {
-        /* Main Content Area (Tasks List)
+      {/* Main Content Area (Tasks List)
           On mobile: Only visible if mobileView === 'tasks'
           On desktop: Always visible (flex-1)
-      */
-      }
+      */}
       <div
         className={`flex-1 flex flex-col min-w-0 overflow-hidden ${
           mobileView === "chat" ? "hidden lg:flex" : "flex"
@@ -247,8 +275,7 @@ const App: React.FC = () => {
                 />
               </svg>
             </button>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-vikunja-400 to-purple-500 border-2 border-white shadow-sm">
-            </div>
+            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-vikunja-400 to-purple-500 border-2 border-white shadow-sm"></div>
           </div>
         </header>
 
@@ -318,58 +345,97 @@ const App: React.FC = () => {
         {/* Task List */}
         <div className="flex-1 overflow-y-auto px-4 lg:px-6 pb-4 min-h-0">
           <div className="space-y-3 max-w-4xl pb-20 lg:pb-0">
-            {!config
-              ? (
-                <div className="text-center py-20">
-                  <p className="text-slate-500 mb-4">
-                    Please configure your Vikunja connection to see tasks.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setIsSettingsOpen(true)}
-                    className="text-vikunja-600 font-medium hover:underline"
-                  >
-                    Open Settings
-                  </button>
-                </div>
-              )
-              : visibleTasks.length === 0
-              ? (
-                <div className="text-center py-20 text-slate-400">
-                  <p>No tasks found in this view.</p>
-                  <p className="text-sm mt-2">Ask the AI to create one!</p>
-                </div>
-              )
-              : (
-                visibleTasks
-                  .sort((a, b) => {
-                    if (a.completed !== b.completed) {
-                      return a.completed ? 1 : -1;
-                    }
-                    if (a.priority !== b.priority) {
-                      return b.priority - a.priority;
-                    }
-                    return b.id - a.id;
-                  })
-                  .map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onToggle={handleTaskToggle}
-                      onSelect={setSelectedTask}
-                    />
-                  ))
-              )}
+            {!config ? (
+              <div className="text-center py-20">
+                <p className="text-slate-500 mb-4">
+                  Please configure your Vikunja connection to see tasks.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="text-vikunja-600 font-medium hover:underline"
+                >
+                  Open Settings
+                </button>
+              </div>
+            ) : visibleTasks.length === 0 ? (
+              <div className="text-center py-20 text-slate-400">
+                <p>No tasks found in this view.</p>
+                <p className="text-sm mt-2">Ask the AI to create one!</p>
+              </div>
+            ) : (
+              visibleTasks
+                .sort((a, b) => {
+                  if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                  }
+                  if (a.priority !== b.priority) {
+                    return b.priority - a.priority;
+                  }
+                  return b.id - a.id;
+                })
+                .map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onToggle={handleTaskToggle}
+                    onSelect={setSelectedTask}
+                  />
+                ))
+            )}
           </div>
+
+          {/* Completed tasks quick view */}
+          {config && filter !== "completed" && completedTasks.length > 0 && (
+            <div className="max-w-4xl mt-6 border-t border-slate-200 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowCompletedList((prev) => !prev)}
+                className="w-full flex items-center justify-between text-left text-sm font-medium text-slate-600 hover:text-slate-800"
+              >
+                <span>Completed tasks ({completedTasks.length})</span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${
+                    showCompletedList ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              {showCompletedList && (
+                <div className="mt-3 space-y-3">
+                  {completedTasks
+                    .sort((a, b) =>
+                      (b.updated || "").localeCompare(a.updated || ""),
+                    )
+                    .map((task) => (
+                      <TaskCard
+                        key={`completed-${task.id}`}
+                        task={task}
+                        onToggle={handleTaskToggle}
+                        onSelect={setSelectedTask}
+                      />
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {
-        /* Chat Area
+      {/* Chat Area
           On mobile: Only visible if mobileView === 'chat'
           On desktop: Always visible (width 400px)
-      */
-      }
+      */}
       <div
         className={`lg:w-[400px] border-l border-slate-200 bg-white flex-col ${
           mobileView === "chat"

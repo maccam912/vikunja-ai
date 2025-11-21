@@ -22,6 +22,7 @@ export interface Task {
   assignee?: string; // Derived from assignees list for display
   tags: string[]; // Mapped from labels
   identifier?: string; // Vikunja identifier (e.g. "TASK-1")
+  updated?: string;
 }
 
 export interface Message {
