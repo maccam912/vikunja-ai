@@ -70,6 +70,31 @@ export async function getTasks(
 }
 
 /**
+ * Update a single task
+ */
+export async function updateTask(
+  vikunjaUrl: string,
+  vikunjaToken: string,
+  taskId: number,
+  updates: Record<string, unknown>,
+): Promise<Task> {
+  const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ vikunjaUrl, vikunjaToken, updates }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to update task: ${error}`);
+  }
+
+  return response.json();
+}
+
+/**
  * Test connection to backend
  */
 export async function testConnection(): Promise<

@@ -170,6 +170,32 @@ app.post("/api/tasks", async (c) => {
   }
 });
 
+// Update a single task
+app.post("/api/tasks/:taskId", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { vikunjaUrl, vikunjaToken, updates } = body;
+    const taskId = Number(c.req.param("taskId"));
+
+    if (!vikunjaUrl || !vikunjaToken || !taskId || !updates) {
+      return c.json({ error: "Missing required fields" }, 400);
+    }
+
+    console.log(`[API] Updating task ${taskId}`);
+
+    const vikunjaClient = new VikunjaClient(vikunjaUrl, vikunjaToken);
+    const updated = await vikunjaClient.updateTask(taskId, updates);
+
+    return c.json(updated);
+  } catch (error) {
+    console.error("[API] Task update error:", error);
+    return c.json(
+      { error: `Failed to update task: ${(error as Error).message}` },
+      500,
+    );
+  }
+});
+
 // Serve frontend static files
 app.use("/*", serveStatic({ root: "../frontend/dist" }));
 
