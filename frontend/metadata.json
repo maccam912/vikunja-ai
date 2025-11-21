@@ -1,0 +1,5 @@
+{
+  "name": "Vikunja AI Agent",
+  "description": "A smart task management dashboard simulating a Vikunja instance, powered by Gemini 2.5. Manage, sequence, and edit tasks using natural language.",
+  "requestFramePermissions": []
+}

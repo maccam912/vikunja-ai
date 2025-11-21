@@ -1,0 +1,18 @@
+{
+  "imports": {
+    "hono": "jsr:@hono/hono@^4.10.6",
+    "hono/cors": "jsr:@hono/hono@^4.10.6/cors",
+    "hono/deno": "jsr:@hono/hono@^4.10.6/deno",
+    "@modelcontextprotocol/sdk": "npm:@modelcontextprotocol/sdk@^1.0.4",
+    "openai": "npm:openai@^4.76.0"
+  },
+  "tasks": {
+    "dev": "deno run --allow-net --allow-env --allow-read --allow-run --env-file=.env --watch backend/main.ts",
+    "start": "deno run --allow-net --allow-env --allow-read --allow-run --env-file=.env backend/main.ts",
+    "build:frontend": "cd frontend && npm install && npm run build"
+  },
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "hono/jsx"
+  }
+}
