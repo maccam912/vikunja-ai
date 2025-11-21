@@ -55,9 +55,10 @@ async function vikunjaFetch(
     `Token Info: Length=${token.length}, Prefix=${token.substring(0, 5)}...`,
   );
 
-  const extraHeaders: HeadersMap = options.headers && typeof options.headers === "object"
-    ? options.headers as HeadersMap
-    : {};
+  const extraHeaders: HeadersMap =
+    options.headers && typeof options.headers === "object"
+      ? options.headers as HeadersMap
+      : {};
 
   const headers: HeadersMap = {
     "Authorization": `Bearer ${token}`,
@@ -75,7 +76,9 @@ async function vikunjaFetch(
     console.log("Response Status:", response.status, response.statusText);
 
     if (!response.ok) {
-      const errorText = await response.text().catch(() => "No error text returned");
+      const errorText = await response.text().catch(() =>
+        "No error text returned"
+      );
       console.error("Error Body:", errorText);
 
       if (response.status === 401) {
