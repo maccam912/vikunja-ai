@@ -4,6 +4,7 @@ import { serveStatic } from "hono/deno";
 import { VikunjaMCPClient } from "./mcpClient.ts";
 import { OpenRouterClient } from "./openrouterClient.ts";
 import { VikunjaClient } from "./vikunjaClient.ts";
+import { initializePhoenix } from "./phoenix.ts";
 
 const app = new Hono();
 
@@ -11,6 +12,15 @@ const app = new Hono();
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const OPENROUTER_MODEL = Deno.env.get("OPENROUTER_MODEL") || "anthropic/claude-3.5-sonnet";
 const PORT = parseInt(Deno.env.get("PORT") || "8000");
+const PHOENIX_ENDPOINT = Deno.env.get("PHOENIX_ENDPOINT") || "https://phoenix.rackspace.koski.co";
+const PHOENIX_API_KEY = Deno.env.get("PHOENIX_API_KEY");
+
+// Initialize Phoenix tracing
+try {
+  initializePhoenix(PHOENIX_ENDPOINT, PHOENIX_API_KEY);
+} catch (error) {
+  console.error("[Phoenix] Failed to initialize, continuing without tracing:", error);
+}
 
 // Middleware
 app.use("/*", cors());
@@ -28,7 +38,7 @@ app.get("/api/health", (c) => {
 app.post("/api/chat", async (c) => {
   try {
     const body = await c.req.json();
-    const { messages, projectId, vikunjaUrl, vikunjaToken } = body;
+    const { messages, projectId, vikunjaUrl, vikunjaToken, sessionId } = body;
 
     if (!messages || !projectId || !vikunjaUrl || !vikunjaToken) {
       return c.json({ error: "Missing required fields" }, 400);
@@ -38,7 +48,10 @@ app.post("/api/chat", async (c) => {
       return c.json({ error: "OPENROUTER_API_KEY not configured" }, 500);
     }
 
-    console.log(`[API] Chat request received for project ${projectId}`);
+    // Generate session ID if not provided
+    const chatSessionId = sessionId || crypto.randomUUID();
+
+    console.log(`[API] Chat request received for project ${projectId}, session: ${chatSessionId}`);
 
     // Initialize MCP client - this is what MCP is for!
     const mcpClient = new VikunjaMCPClient(vikunjaUrl, vikunjaToken);
@@ -90,7 +103,8 @@ Be helpful, use the tools to accomplish the user's requests, and confirm when ac
         }
       },
       systemPrompt,
-      10 // Max 10 steps
+      10, // Max 10 steps
+      chatSessionId // Pass session ID for Phoenix tracing
     );
 
     // Disconnect MCP client
@@ -99,6 +113,7 @@ Be helpful, use the tools to accomplish the user's requests, and confirm when ac
     return c.json({
       message: result.finalMessage,
       toolCalls: result.allToolCalls,
+      sessionId: chatSessionId, // Return session ID to frontend
     });
   } catch (error) {
     console.error("[API] Chat error:", error);
@@ -144,5 +159,6 @@ app.get("/*", serveStatic({ path: "../frontend/dist/index.html" }));
 console.log(`🚀 Server starting on http://localhost:${PORT}`);
 console.log(`📦 Model: ${OPENROUTER_MODEL}`);
 console.log(`🔧 OpenRouter API Key: ${OPENROUTER_API_KEY ? '✓ Configured' : '✗ Missing'}`);
+console.log(`📊 Phoenix Tracing: ${PHOENIX_ENDPOINT}`);
 
 Deno.serve({ port: PORT }, app.fetch);

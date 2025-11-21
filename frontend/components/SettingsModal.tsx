@@ -134,6 +134,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               placeholder="https://vikunja.yourdomain.com"
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-vikunja-500 focus:border-vikunja-500 outline-none transition-all"
             />
+            <p className="text-xs text-slate-500 mt-1">Just the base URL, don't include /api/v1</p>
           </div>
 
           <div>

@@ -1,4 +1,7 @@
 import OpenAI from "openai";
+import { trace, context, type Span } from "@opentelemetry/api";
+import { SemanticConventions } from "@arizeai/openinference-semantic-conventions";
+import { setSession } from "@arizeai/openinference-core";
 
 export interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -20,6 +23,7 @@ export interface ChatCompletionResult {
 export class OpenRouterClient {
   private client: OpenAI;
   private model: string;
+  private tracer = trace.getTracer("vikunja-ai");
 
   constructor(apiKey: string, model: string = "anthropic/claude-3.5-sonnet") {
     this.client = new OpenAI({
@@ -37,6 +41,52 @@ export class OpenRouterClient {
    * Send a chat completion request with function calling support
    */
   async chatCompletion(
+    messages: ChatMessage[],
+    tools?: any[],
+    systemPrompt?: string,
+    sessionId?: string
+  ): Promise<ChatCompletionResult> {
+    // Wrap in session span if sessionId provided
+    if (sessionId) {
+      return this.tracer.startActiveSpan("chat", async (span: Span) => {
+        try {
+          span.setAttribute(SemanticConventions.OPENINFERENCE_SPAN_KIND, "chain");
+          span.setAttribute(SemanticConventions.SESSION_ID, sessionId);
+
+          // Get the last user message as input
+          const lastUserMessage = messages.filter(m => m.role === "user").pop();
+          if (lastUserMessage) {
+            span.setAttribute(SemanticConventions.INPUT_VALUE, lastUserMessage.content);
+          }
+
+          // Execute in session context
+          return await context.with(
+            setSession(context.active(), { sessionId }),
+            async () => {
+              const result = await this._executeChatCompletion(messages, tools, systemPrompt);
+
+              // Set output value
+              span.setAttribute(SemanticConventions.OUTPUT_VALUE, result.message);
+              span.end();
+
+              return result;
+            }
+          );
+        } catch (error) {
+          span.recordException(error as Error);
+          span.end();
+          throw error;
+        }
+      });
+    } else {
+      return this._executeChatCompletion(messages, tools, systemPrompt);
+    }
+  }
+
+  /**
+   * Internal method to execute chat completion
+   */
+  private async _executeChatCompletion(
     messages: ChatMessage[],
     tools?: any[],
     systemPrompt?: string
@@ -102,7 +152,8 @@ export class OpenRouterClient {
     tools: any[],
     toolExecutor: (name: string, args: any) => Promise<any>,
     systemPrompt?: string,
-    maxSteps: number = 10
+    maxSteps: number = 10,
+    sessionId?: string
   ): Promise<{
     finalMessage: string;
     allToolCalls: Array<{ name: string; args: any; result: any }>;
@@ -119,7 +170,8 @@ export class OpenRouterClient {
       const result = await this.chatCompletion(
         conversationHistory,
         tools,
-        systemPrompt
+        systemPrompt,
+        sessionId
       );
 
       // If no tool calls, we're done

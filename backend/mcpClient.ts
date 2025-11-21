@@ -19,6 +19,19 @@ export class VikunjaMCPClient {
   ) {}
 
   /**
+   * Normalize Vikunja URL to ensure it includes /api/v1
+   */
+  private normalizeUrl(url: string): string {
+    let cleaned = url.trim().replace(/\/+$/, '');
+    // Remove /api/v1 if it exists
+    if (cleaned.endsWith('/api/v1')) {
+      cleaned = cleaned.substring(0, cleaned.length - 7);
+    }
+    // Add /api/v1 back
+    return `${cleaned}/api/v1`;
+  }
+
+  /**
    * Initialize connection to the Vikunja MCP server
    */
   async connect(): Promise<void> {
@@ -27,13 +40,17 @@ export class VikunjaMCPClient {
     }
 
     try {
+      // Normalize URL to include /api/v1
+      const normalizedUrl = this.normalizeUrl(this.vikunjaUrl);
+      console.log(`[MCP] Connecting to Vikunja: ${normalizedUrl}`);
+
       // Create stdio transport for MCP server
       this.transport = new StdioClientTransport({
         command: "npx",
         args: ["-y", "@democratize-technology/vikunja-mcp"],
         env: {
           ...process.env,
-          VIKUNJA_URL: this.vikunjaUrl,
+          VIKUNJA_URL: normalizedUrl,
           VIKUNJA_API_TOKEN: this.vikunjaToken,
         },
       });

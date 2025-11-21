@@ -4,7 +4,12 @@
     "hono/cors": "jsr:@hono/hono@^4.10.6/cors",
     "hono/deno": "jsr:@hono/hono@^4.10.6/deno",
     "@modelcontextprotocol/sdk": "npm:@modelcontextprotocol/sdk@^1.0.4",
-    "openai": "npm:openai@^4.76.0"
+    "openai": "npm:openai@^4.76.0",
+    "@arizeai/phoenix-otel": "npm:@arizeai/phoenix-otel@^0.1.0",
+    "@arizeai/openinference-instrumentation-openai": "npm:@arizeai/openinference-instrumentation-openai@^0.6.0",
+    "@arizeai/openinference-core": "npm:@arizeai/openinference-core@^0.1.0",
+    "@arizeai/openinference-semantic-conventions": "npm:@arizeai/openinference-semantic-conventions@^0.12.0",
+    "@opentelemetry/api": "npm:@opentelemetry/api@^1.9.0"
   },
   "tasks": {
     "dev": "deno run --allow-net --allow-env --allow-read --allow-run --env-file=.env --watch backend/main.ts",
