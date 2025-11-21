@@ -241,7 +241,8 @@ export const api = {
     }
 
     const data = await vikunjaFetch(config, `/tasks/${task.id}`, {
-      method: "POST",
+      // Vikunja expects PUT when updating an existing task
+      method: "PUT",
       body: JSON.stringify(payload),
     });
     return mapToLocalTask(data);

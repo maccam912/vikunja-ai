@@ -109,7 +109,8 @@ export class VikunjaClient {
     due_date?: string;
   }): Promise<VikunjaTask> {
     return await this.request(`/projects/${projectId}/tasks`, {
-      method: "POST",
+      // Vikunja expects PUT for creation
+      method: "PUT",
       body: JSON.stringify(task),
     }) as VikunjaTask;
   }
@@ -119,7 +120,8 @@ export class VikunjaClient {
     updates: Partial<VikunjaTask>,
   ): Promise<VikunjaTask> {
     return await this.request(`/tasks/${taskId}`, {
-      method: "POST",
+      // Vikunja uses PUT to update an existing task
+      method: "PUT",
       body: JSON.stringify(updates),
     }) as VikunjaTask;
   }
