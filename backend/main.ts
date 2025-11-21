@@ -91,19 +91,24 @@ Be helpful, use the tools to accomplish the user's requests, and confirm when ac
     const result = await openRouterClient.chatWithTools(
       messages,
       tools,
-      async (name: string, args: any) => {
+      async (name: string, args: Record<string, unknown>) => {
         // Let MCP handle the tool execution
         console.log(`[API] LLM calling MCP tool: ${name}`, args);
         const mcpResult = await mcpClient.executeTool(name, args);
 
         // MCP returns { content: [{ type: "text", text: "..." }], isError: bool }
         // Extract the actual result for the LLM
-        if (mcpResult.isError) {
-          const errorText = mcpResult.content?.[0]?.text || "Unknown error";
+        const mcpResponse = mcpResult as {
+          isError?: boolean;
+          content?: Array<{ text?: string }>;
+        };
+
+        if (mcpResponse.isError) {
+          const errorText = mcpResponse.content?.[0]?.text || "Unknown error";
           throw new Error(errorText);
         }
 
-        const resultText = mcpResult.content?.[0]?.text || "{}";
+        const resultText = mcpResponse.content?.[0]?.text || "{}";
 
         // Try to parse as JSON, otherwise return as-is
         try {

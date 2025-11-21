@@ -11,7 +11,16 @@ export interface ChatMessage {
 export interface ToolCall {
   id: string;
   name: string;
-  arguments: any;
+  arguments: Record<string, unknown>;
+}
+
+export interface ToolDefinition {
+  type: "function";
+  function: {
+    name: string;
+    description?: string;
+    parameters: Record<string, unknown>;
+  };
 }
 
 export interface ChatCompletionResult {
@@ -42,13 +51,13 @@ export class OpenRouterClient {
    */
   async chatCompletion(
     messages: ChatMessage[],
-    tools?: any[],
+    tools?: ToolDefinition[],
     systemPrompt?: string,
     sessionId?: string,
   ): Promise<ChatCompletionResult> {
     // Wrap in session span if sessionId provided
     if (sessionId) {
-      return this.tracer.startActiveSpan("chat", async (span: Span) => {
+      return await this.tracer.startActiveSpan("chat", async (span: Span) => {
         try {
           span.setAttribute(
             SemanticConventions.OPENINFERENCE_SPAN_KIND,
@@ -92,9 +101,9 @@ export class OpenRouterClient {
           throw error;
         }
       });
-    } else {
-      return this._executeChatCompletion(messages, tools, systemPrompt);
     }
+
+    return await this._executeChatCompletion(messages, tools, systemPrompt);
   }
 
   /**
@@ -102,7 +111,7 @@ export class OpenRouterClient {
    */
   private async _executeChatCompletion(
     messages: ChatMessage[],
-    tools?: any[],
+    tools?: ToolDefinition[],
     systemPrompt?: string,
   ): Promise<ChatCompletionResult> {
     try {
@@ -111,7 +120,12 @@ export class OpenRouterClient {
         ? [{ role: "system" as const, content: systemPrompt }, ...messages]
         : messages;
 
-      const params: any = {
+      const params: {
+        model: string;
+        messages: ChatMessage[];
+        tools?: ToolDefinition[];
+        tool_choice?: "auto";
+      } = {
         model: this.model,
         messages: allMessages,
       };
@@ -141,7 +155,10 @@ export class OpenRouterClient {
             toolCalls.push({
               id: tc.id,
               name: tc.function.name,
-              arguments: JSON.parse(tc.function.arguments),
+              arguments: JSON.parse(tc.function.arguments) as Record<
+                string,
+                unknown
+              >,
             });
           }
         }
@@ -163,18 +180,25 @@ export class OpenRouterClient {
    */
   async chatWithTools(
     messages: ChatMessage[],
-    tools: any[],
-    toolExecutor: (name: string, args: any) => Promise<any>,
+    tools: ToolDefinition[],
+    toolExecutor: (
+      name: string,
+      args: Record<string, unknown>,
+    ) => Promise<unknown>,
     systemPrompt?: string,
     maxSteps: number = 10,
     sessionId?: string,
   ): Promise<{
     finalMessage: string;
-    allToolCalls: Array<{ name: string; args: any; result: any }>;
+    allToolCalls: Array<
+      { name: string; args: Record<string, unknown>; result: unknown }
+    >;
     conversationHistory: ChatMessage[];
   }> {
     const conversationHistory: ChatMessage[] = [...messages];
-    const allToolCalls: Array<{ name: string; args: any; result: any }> = [];
+    const allToolCalls: Array<
+      { name: string; args: Record<string, unknown>; result: unknown }
+    > = [];
     let stepCount = 0;
 
     while (stepCount < maxSteps) {

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { VikunjaConfig, VikunjaProject } from "../types";
 import { api } from "../services/vikunjaApi";
 
+const DEFAULT_URL = "https://vikunja.rackspace.koski.co";
+const DEFAULT_TOKEN = "tk_598288a0fb2cc9a123b8ddcef59946b3cc4fae2e";
+
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -13,10 +16,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
   { isOpen, onClose, onSave, currentConfig },
 ) => {
   // Pre-filled with test credentials as requested
-  const [url, setUrl] = useState("https://vikunja.rackspace.koski.co");
-  const [token, setToken] = useState(
-    "tk_598288a0fb2cc9a123b8ddcef59946b3cc4fae2e",
-  );
+  const [url, setUrl] = useState(DEFAULT_URL);
+  const [token, setToken] = useState(DEFAULT_TOKEN);
   const [projectId, setProjectId] = useState<number | null>(null);
   const [customInstructions, setCustomInstructions] = useState("");
 
@@ -42,7 +43,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
 
         if (targetProjectId) {
           setProjectId(targetProjectId);
-        } else if (list.length > 0 && !projectId) {
+        } else if (list.length > 0) {
           setProjectId(list[0].id);
         }
       } catch (e) {
@@ -64,7 +65,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
       );
     } else {
       // If no config exists, try to auto-connect with the defaults (test credentials)
-      loadProjects(url, token);
+      loadProjects(DEFAULT_URL, DEFAULT_TOKEN);
     }
   }, [currentConfig]);
 
@@ -125,6 +126,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
             </p>
           </div>
           <button
+            type="button"
             onClick={handleReset}
             className="text-xs text-red-500 hover:text-red-700 underline"
           >
@@ -233,6 +235,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
           </div>
 
           <button
+            type="button"
             onClick={handleConnect}
             disabled={!url || !token || isLoadingProjects}
             className="w-full px-4 py-2 bg-vikunja-500 text-white rounded-lg hover:bg-vikunja-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all"
@@ -274,12 +277,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
 
         <div className="p-6 border-t border-slate-100 flex gap-3 flex-shrink-0">
           <button
+            type="button"
             onClick={onClose}
             className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-all"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={!projectId}
             className="flex-1 px-4 py-2 bg-vikunja-500 text-white rounded-lg hover:bg-vikunja-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all"

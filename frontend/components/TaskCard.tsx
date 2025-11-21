@@ -46,7 +46,7 @@ const stripHtml = (html: string) => {
 export const TaskCard: React.FC<TaskCardProps> = (
   { task, onToggle, onSelect },
 ) => {
-  const handleCardClick = (e: React.MouseEvent) => {
+  const handleCardClick = () => {
     // Prevent triggering select when clicking the checkbox
     onSelect(task);
   };
@@ -61,6 +61,7 @@ export const TaskCard: React.FC<TaskCardProps> = (
       {/* Checkbox */}
       <div className="pt-1">
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onToggle(task.id);

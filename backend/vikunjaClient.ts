@@ -13,6 +13,30 @@ export interface VikunjaTask {
   updated: string;
 }
 
+interface RawVikunjaTask {
+  id: number;
+  title: string;
+  description?: string;
+  done?: boolean;
+  priority?: number;
+  due_date?: string;
+  assignees?: Array<{ username?: string }>;
+  labels?: Array<{ title?: string } | string>;
+  identifier?: string;
+}
+
+interface FormattedTask {
+  id: number;
+  title: string;
+  description: string;
+  completed: boolean;
+  priority: number;
+  dueDate?: string;
+  assignee?: string;
+  tags: string[];
+  identifier?: string;
+}
+
 export class VikunjaClient {
   constructor(
     private baseUrl: string,
@@ -28,16 +52,18 @@ export class VikunjaClient {
   private async request(
     endpoint: string,
     options: RequestInit = {},
-  ): Promise<any> {
+  ): Promise<unknown> {
     const url = `${this.baseUrl}/api/v1${endpoint}`;
+
+    const mergedHeaders: HeadersInit = {
+      "Authorization": `Bearer ${this.apiToken}`,
+      "Content-Type": "application/json",
+      ...options.headers,
+    };
 
     const response = await fetch(url, {
       ...options,
-      headers: {
-        "Authorization": `Bearer ${this.apiToken}`,
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+      headers: mergedHeaders,
     });
 
     if (!response.ok) {
@@ -52,12 +78,14 @@ export class VikunjaClient {
     return response.json();
   }
 
-  async listTasks(projectId: number): Promise<any[]> {
+  async listTasks(projectId: number): Promise<FormattedTask[]> {
     const data = await this.request(`/projects/${projectId}/tasks`);
-    const tasks = Array.isArray(data) ? data : (data.results || []);
+    const tasks = Array.isArray(data)
+      ? data as RawVikunjaTask[]
+      : ((data as { results?: RawVikunjaTask[] }).results || []);
 
     // Transform to frontend format
-    return tasks.map((task: any) => ({
+    return tasks.map((task) => ({
       id: task.id,
       title: task.title,
       description: task.description || "",
@@ -67,7 +95,9 @@ export class VikunjaClient {
         ? task.due_date
         : undefined,
       assignee: task.assignees?.[0]?.username || undefined,
-      tags: (task.labels || []).map((label: any) => label.title || label),
+      tags: (task.labels || []).map((label) =>
+        typeof label === "string" ? label : (label.title || String(label))
+      ),
       identifier: task.identifier,
     }));
   }
@@ -78,28 +108,28 @@ export class VikunjaClient {
     priority?: number;
     due_date?: string;
   }): Promise<VikunjaTask> {
-    return this.request(`/projects/${projectId}/tasks`, {
+    return await this.request(`/projects/${projectId}/tasks`, {
       method: "POST",
       body: JSON.stringify(task),
-    });
+    }) as VikunjaTask;
   }
 
   async updateTask(
     taskId: number,
     updates: Partial<VikunjaTask>,
   ): Promise<VikunjaTask> {
-    return this.request(`/tasks/${taskId}`, {
+    return await this.request(`/tasks/${taskId}`, {
       method: "POST",
       body: JSON.stringify(updates),
-    });
+    }) as VikunjaTask;
   }
 
   async deleteTask(taskId: number): Promise<void> {
     await this.request(`/tasks/${taskId}`, { method: "DELETE" });
   }
 
-  async getProjects() {
-    return this.request("/projects");
+  async getProjects(): Promise<unknown> {
+    return await this.request("/projects");
   }
 }
 

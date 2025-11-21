@@ -25,7 +25,7 @@ export function initializePhoenix(phoenixEndpoint: string, apiKey?: string) {
     }
 
     // Register Phoenix OTEL provider (ESM approach)
-    const provider = register({
+    register({
       projectName: "vikunja-ai",
     });
 

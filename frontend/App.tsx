@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Message, Task, VikunjaConfig } from "./types";
 import { TaskCard } from "./components/TaskCard";
 import { Chat } from "./components/Chat";
@@ -43,9 +43,9 @@ const App: React.FC = () => {
     if (config) {
       refreshData();
     }
-  }, [config]);
+  }, [config, refreshData]);
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     if (!config) return;
     setIsRefreshing(true);
     try {
@@ -67,7 +67,7 @@ const App: React.FC = () => {
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [config]);
 
   const handleSaveConfig = (newConfig: VikunjaConfig) => {
     setConfig(newConfig);
@@ -139,7 +139,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleTaskToggle = async (id: number) => {
+  const handleTaskToggle = (id: number) => {
     if (!config) return;
     const task = tasks.find((t) => t.id === id);
     if (task) {
@@ -221,6 +221,7 @@ const App: React.FC = () => {
 
           <div className="flex items-center gap-4">
             <button
+              type="button"
               onClick={() => setIsSettingsOpen(true)}
               className="p-2 text-slate-400 hover:text-vikunja-600 hover:bg-vikunja-50 rounded-full transition-all"
               title="Settings"
@@ -255,6 +256,7 @@ const App: React.FC = () => {
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-bold text-slate-800">My Tasks</h2>
             <button
+              type="button"
               onClick={refreshData}
               className="p-1.5 text-slate-400 hover:text-vikunja-600 rounded-lg transition-colors"
               title="Refresh"
@@ -277,6 +279,7 @@ const App: React.FC = () => {
 
           <div className="flex items-center bg-white rounded-lg p-1 border border-slate-200 shadow-sm self-start sm:self-auto">
             <button
+              type="button"
               onClick={() => setFilter("all")}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 filter === "all"
@@ -287,6 +290,7 @@ const App: React.FC = () => {
               All
             </button>
             <button
+              type="button"
               onClick={() => setFilter("active")}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 filter === "active"
@@ -297,6 +301,7 @@ const App: React.FC = () => {
               Active
             </button>
             <button
+              type="button"
               onClick={() => setFilter("completed")}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 filter === "completed"
@@ -319,6 +324,7 @@ const App: React.FC = () => {
                     Please configure your Vikunja connection to see tasks.
                   </p>
                   <button
+                    type="button"
                     onClick={() => setIsSettingsOpen(true)}
                     className="text-vikunja-600 font-medium hover:underline"
                   >
@@ -381,6 +387,7 @@ const App: React.FC = () => {
       {/* Mobile Bottom Navigation */}
       <div className="lg:hidden h-16 bg-white border-t border-slate-200 flex-shrink-0 flex justify-around items-center z-20 pb-[env(safe-area-inset-bottom)]">
         <button
+          type="button"
           onClick={() => setMobileView("tasks")}
           className={`flex flex-col items-center justify-center w-full h-full ${
             mobileView === "tasks"
@@ -407,6 +414,7 @@ const App: React.FC = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => setMobileView("chat")}
           className={`flex flex-col items-center justify-center w-full h-full ${
             mobileView === "chat"

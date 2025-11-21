@@ -5,7 +5,7 @@ import process from "node:process";
 export interface MCPTool {
   name: string;
   description: string;
-  inputSchema: any;
+  inputSchema: Record<string, unknown>;
 }
 
 export class VikunjaMCPClient {
@@ -70,7 +70,11 @@ export class VikunjaMCPClient {
 
       // Discover available tools
       const toolsResponse = await this.client.listTools();
-      this.tools = toolsResponse.tools.map((tool: any) => ({
+      this.tools = toolsResponse.tools.map((tool: {
+        name: string;
+        description: string;
+        inputSchema: Record<string, unknown>;
+      }) => ({
         name: tool.name,
         description: tool.description,
         inputSchema: tool.inputSchema,
@@ -96,7 +100,10 @@ export class VikunjaMCPClient {
   /**
    * Execute a tool call via MCP server
    */
-  async executeTool(name: string, args: any): Promise<any> {
+  async executeTool(
+    name: string,
+    args: Record<string, unknown>,
+  ): Promise<unknown> {
     if (!this.connected || !this.client) {
       throw new Error("MCP client not connected");
     }
@@ -119,7 +126,14 @@ export class VikunjaMCPClient {
   /**
    * Convert MCP tools to OpenAI function calling format
    */
-  getOpenAIFunctions(): any[] {
+  getOpenAIFunctions(): Array<{
+    type: "function";
+    function: {
+      name: string;
+      description: string;
+      parameters: Record<string, unknown>;
+    };
+  }> {
     return this.tools.map((tool) => ({
       type: "function",
       function: {

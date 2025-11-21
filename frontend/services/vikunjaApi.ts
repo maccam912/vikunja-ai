@@ -1,10 +1,18 @@
-import {
-  Task,
-  TaskPriority,
-  VikunjaConfig,
-  VikunjaProject,
-  VikunjaUser,
-} from "../types";
+import { Task, VikunjaConfig, VikunjaProject, VikunjaUser } from "../types";
+
+type HeadersMap = Record<string, string>;
+
+interface RawVikunjaTask {
+  id: number;
+  title: string;
+  description?: string;
+  done: boolean;
+  priority?: number;
+  due_date?: string;
+  assignees?: Array<{ username?: string; name?: string }>;
+  labels?: Array<{ title: string }>;
+  identifier?: string;
+}
 
 // Helper to clean URL and ensure it doesn't end with slash or /api/v1
 const cleanUrl = (url: string) => {
@@ -47,9 +55,13 @@ async function vikunjaFetch(
     `Token Info: Length=${token.length}, Prefix=${token.substring(0, 5)}...`,
   );
 
-  const headers: Record<string, string> = {
+  const extraHeaders: HeadersMap = options.headers && typeof options.headers === "object"
+    ? options.headers as HeadersMap
+    : {};
+
+  const headers: HeadersMap = {
     "Authorization": `Bearer ${token}`,
-    ...options.headers as any,
+    ...extraHeaders,
   };
 
   // Only add Content-Type for methods that typically have a body.
@@ -63,9 +75,7 @@ async function vikunjaFetch(
     console.log("Response Status:", response.status, response.statusText);
 
     if (!response.ok) {
-      const errorText = await response.text().catch((e) =>
-        "No error text returned"
-      );
+      const errorText = await response.text().catch(() => "No error text returned");
       console.error("Error Body:", errorText);
 
       if (response.status === 401) {
@@ -108,7 +118,7 @@ async function vikunjaFetch(
 
 // -- Mappers --
 
-const mapToLocalTask = (vTask: any): Task => {
+const mapToLocalTask = (vTask: RawVikunjaTask): Task => {
   // Vikunja often returns "0001-01-01T00:00:00Z" for null dates.
   // We must strictly filter these out.
   let validDueDate: string | undefined = undefined;
@@ -129,7 +139,7 @@ const mapToLocalTask = (vTask: any): Task => {
     priority: vTask.priority || 1,
     dueDate: validDueDate,
     assignee: vTask.assignees?.[0]?.username || vTask.assignees?.[0]?.name,
-    tags: (vTask.labels || []).map((l: any) => l.title),
+    tags: (vTask.labels || []).map((l) => l.title),
     identifier: vTask.identifier,
   };
 };
@@ -175,7 +185,7 @@ export const api = {
     task: Partial<Task>,
     allUsers: VikunjaUser[] = [],
   ): Promise<Task> {
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       title: task.title,
       description: task.description,
       priority: task.priority,
@@ -209,7 +219,7 @@ export const api = {
     task: Partial<Task> & { id: number },
     allUsers: VikunjaUser[] = [],
   ): Promise<Task> {
-    const payload: any = {};
+    const payload: Record<string, unknown> = {};
     if (task.title !== undefined) payload.title = task.title;
     if (task.description !== undefined) payload.description = task.description;
     if (task.completed !== undefined) payload.done = task.completed;
@@ -246,7 +256,7 @@ export const api = {
     taskId: number,
     otherTaskId: number,
     relationKind: string = "depends_on",
-  ): Promise<any> {
+  ): Promise<unknown> {
     const payload = {
       other_task_id: otherTaskId,
       relation_kind: relationKind,

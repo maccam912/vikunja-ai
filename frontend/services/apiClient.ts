@@ -1,4 +1,4 @@
-import type { Message, Task, VikunjaProject, VikunjaUser } from "../types";
+import type { Task } from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
@@ -18,8 +18,8 @@ export interface ChatResponse {
   message: string;
   toolCalls?: Array<{
     tool: string;
-    args: any;
-    result: any;
+    args: Record<string, unknown>;
+    result: unknown;
   }>;
 }
 
