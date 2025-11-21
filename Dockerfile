@@ -6,14 +6,14 @@ COPY frontend/ .
 RUN npm run build
 
 FROM denoland/deno:alpine
-WORKDIR /app
+WORKDIR /app/backend
 
 # Copy Deno files
-COPY deno.json deno.lock main.ts ./
-COPY src ./src
+COPY deno.json deno.lock ./
+COPY backend/ ./
 
 # Copy built frontend assets
-COPY --from=frontend-builder /app/frontend/dist ./dist
+COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
 # Cache Deno dependencies
 RUN deno cache main.ts
