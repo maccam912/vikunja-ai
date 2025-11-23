@@ -1,5 +1,5 @@
 import React from "react";
-import { Task, TaskPriority } from "../types";
+import { Task, TaskPriority, TaskRelationKind } from "../types";
 
 interface TaskCardProps {
   task: Task;
@@ -50,6 +50,19 @@ export const TaskCard: React.FC<TaskCardProps> = (
     // Prevent triggering select when clicking the checkbox
     onSelect(task);
   };
+
+  // Calculate blocking/blocked relationships
+  const blockingTasks = task.relatedTasks?.filter(
+    (r) =>
+      r.relation_kind === TaskRelationKind.BLOCKED ||
+      r.relation_kind === "blocked",
+  ) || [];
+
+  const blockedTasks = task.relatedTasks?.filter(
+    (r) =>
+      r.relation_kind === TaskRelationKind.BLOCKING ||
+      r.relation_kind === "blocking",
+  ) || [];
 
   return (
     <div
@@ -151,6 +164,47 @@ export const TaskCard: React.FC<TaskCardProps> = (
                 {task.assignee.charAt(0).toUpperCase()}
               </div>
               <span>{task.assignee}</span>
+            </div>
+          )}
+
+          {/* Blocking/Blocked indicators */}
+          {blockingTasks.length > 0 && (
+            <div
+              className="flex items-center gap-1 text-red-600 font-medium"
+              title={`Blocked by ${blockingTasks.length} task(s)`}
+            >
+              <svg
+                className="w-3.5 h-3.5"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>Blocked by {blockingTasks.length}</span>
+            </div>
+          )}
+
+          {blockedTasks.length > 0 && (
+            <div
+              className="flex items-center gap-1 text-amber-600 font-medium"
+              title={`Blocking ${blockedTasks.length} task(s)`}
+            >
+              <svg
+                className="w-3.5 h-3.5"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>Blocks {blockedTasks.length}</span>
             </div>
           )}
 
