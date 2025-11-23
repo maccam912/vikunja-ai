@@ -24,6 +24,7 @@ interface ChatRequestBody {
   vikunjaUrl: string;
   vikunjaToken: string;
   sessionId?: string;
+  userTimezone?: string; // Optional user timezone (e.g., "America/New_York")
 }
 
 interface TasksRequestBody {
@@ -69,7 +70,14 @@ app.get("/api/health", (c) => {
 app.post("/api/chat", async (c) => {
   try {
     const body = await c.req.json() as ChatRequestBody;
-    const { messages, projectId, vikunjaUrl, vikunjaToken, sessionId } = body;
+    const {
+      messages,
+      projectId,
+      vikunjaUrl,
+      vikunjaToken,
+      sessionId,
+      userTimezone,
+    } = body;
 
     if (!messages || !projectId || !vikunjaUrl || !vikunjaToken) {
       return c.json({ error: "Missing required fields" }, 400);
@@ -100,10 +108,41 @@ app.post("/api/chat", async (c) => {
       OPENROUTER_MODEL,
     );
 
-    // System prompt
+    // System prompt with temporal context
+    const now = new Date();
+    const timezone = userTimezone ||
+      Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    const dateOptions: Intl.DateTimeFormatOptions = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: timezone,
+    };
+    const timeOptions: Intl.DateTimeFormatOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZoneName: "short",
+      timeZone: timezone,
+    };
+
+    const formattedDate = now.toLocaleDateString("en-US", dateOptions);
+    const formattedTime = now.toLocaleTimeString("en-US", timeOptions);
+    const isoDateTime = now.toISOString();
+
     const systemPrompt = `You are a helpful Vikunja Task Manager assistant.
 You are connected to the user's Vikunja instance (Project ID: ${projectId}).
-Current Date: ${new Date().toISOString().split("T")[0]}.
+
+## Current Date and Time Context
+- Current Date and Time: ${formattedDate} at ${formattedTime}
+- ISO Format: ${isoDateTime}
+- User Timezone: ${timezone}
+
+When users mention relative dates like "tomorrow", "next week", "in 3 days", etc.,
+calculate the actual date based on the current date and time above.
 
 You have access to Vikunja MCP tools. When using vikunja_tasks:
 - Always include the "subcommand" parameter (e.g., "list", "create", "update", "delete")
