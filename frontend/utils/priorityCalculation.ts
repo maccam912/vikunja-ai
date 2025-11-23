@@ -143,6 +143,79 @@ function calculateTaskPriority(
 }
 
 /**
+ * Breakdown of priority components for transparency
+ */
+export interface PriorityBreakdown {
+  baseScore: number;
+  dueDateScore: number;
+  blockingBonus: number;
+  isBlocked: boolean;
+  totalBeforeBlocked: number;
+  finalScore: number;
+}
+
+/**
+ * Calculate priority breakdown for a single task
+ */
+export function calculatePriorityBreakdown(
+  task: Task,
+  allTasks: Task[],
+): PriorityBreakdown {
+  // Skip completed tasks
+  if (task.completed) {
+    return {
+      baseScore: 0,
+      dueDateScore: 0,
+      blockingBonus: 0,
+      isBlocked: false,
+      totalBeforeBlocked: 0,
+      finalScore: 0,
+    };
+  }
+
+  // Base priority from Vikunja (0-5 scale)
+  const baseScore = task.priority * PRIORITY_WEIGHTS.BASE_PRIORITY;
+
+  // Add due date urgency
+  const dueDateScore = getDueDateScore(task.dueDate);
+
+  // Check if this task is blocked by incomplete tasks
+  const isBlocked = isTaskBlocked(task, allTasks);
+
+  let blockingBonus = 0;
+  if (!isBlocked) {
+    // If not blocked, add priorities from tasks that this task blocks
+    const blockedTasks = getBlockedTasks(task, allTasks);
+
+    for (const blockedTask of blockedTasks) {
+      if (!blockedTask.completed) {
+        // Add the blocked task's priority to this task
+        const blockedPriority = calculateTaskPriority(
+          blockedTask,
+          allTasks,
+          new Set<number>([task.id]),
+        );
+        blockingBonus += blockedPriority * 0.5; // Add 50% of blocked task's priority
+      }
+    }
+  }
+
+  const totalBeforeBlocked = baseScore + dueDateScore + blockingBonus;
+  const finalScore = isBlocked
+    ? totalBeforeBlocked * PRIORITY_WEIGHTS.BLOCKED_PENALTY
+    : totalBeforeBlocked;
+
+  return {
+    baseScore,
+    dueDateScore,
+    blockingBonus,
+    isBlocked,
+    totalBeforeBlocked,
+    finalScore,
+  };
+}
+
+/**
  * Calculate custom priority scores for all tasks
  */
 export function calculatePriorities(tasks: Task[]): Task[] {
