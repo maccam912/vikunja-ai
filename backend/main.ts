@@ -144,6 +144,33 @@ You are connected to the user's Vikunja instance (Project ID: ${projectId}).
 When users mention relative dates like "tomorrow", "next week", "in 3 days", etc.,
 calculate the actual date based on the current date and time above.
 
+## CRITICAL: Date Format Requirements for Vikunja
+
+Vikunja's backend (written in Go) requires RFC3339 format with timezone information.
+ALL dates MUST include a timezone suffix - never send bare datetime strings.
+
+**REQUIRED FORMAT**: YYYY-MM-DDTHH:MM:SS + timezone suffix
+
+**Correct formats:**
+- "2025-12-07T09:00:00Z" (UTC time)
+- "2025-12-07T09:00:00-06:00" (Central Time with offset)
+- "2025-12-07T09:00:00+01:00" (CET with offset)
+
+**WRONG - Will cause errors:**
+- "2025-12-07T09:00:00" (missing timezone - DO NOT USE)
+- "2025-12-07" (missing time and timezone)
+
+**Implementation:**
+- For due_date, start_date, end_date, and any date fields in Vikunja tasks
+- When creating or updating tasks, append "Z" for UTC times
+- Or append the timezone offset (e.g., "-06:00" for Central Time USA)
+- Use JavaScript's toISOString() method which automatically includes "Z"
+
+**Example:**
+- User says: "Set due date to December 7th at 9 AM"
+- You send: { "due_date": "2025-12-07T09:00:00-06:00" } (for Central Time)
+- OR: { "due_date": "2025-12-07T15:00:00Z" } (converted to UTC)
+
 You have access to Vikunja MCP tools. When using vikunja_tasks:
 - Always include the "subcommand" parameter (e.g., "list", "create", "update", "delete")
 - For listing tasks, use: { subcommand: "list", projectId: ${projectId} }

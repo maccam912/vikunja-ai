@@ -65,6 +65,24 @@ export class VikunjaClient {
     }
   }
 
+  /**
+   * Ensures a date string has RFC3339 timezone format required by Vikunja.
+   * Appends "Z" (UTC) if timezone is missing.
+   */
+  private ensureTimezone(dateStr: string | undefined): string | undefined {
+    if (!dateStr) return undefined;
+
+    // Check if already has timezone (ends with Z or +/-HH:MM)
+    const hasTimezone = /Z$|[+-]\d{2}:\d{2}$/.test(dateStr);
+
+    if (hasTimezone) {
+      return dateStr;
+    }
+
+    // Append Z for UTC if missing
+    return `${dateStr}Z`;
+  }
+
   private formatTask(task: RawVikunjaTask): FormattedTask {
     // Flatten related_tasks object into a single array
     const relatedTasks: TaskRelation[] = [];
@@ -143,9 +161,15 @@ export class VikunjaClient {
       due_date?: string;
     },
   ): Promise<VikunjaTask> {
+    // Ensure due_date has timezone suffix
+    const taskWithTimezone = {
+      ...task,
+      due_date: this.ensureTimezone(task.due_date),
+    };
+
     return (await this.request(`/projects/${projectId}/tasks`, {
       method: "POST",
-      body: JSON.stringify(task),
+      body: JSON.stringify(taskWithTimezone),
     })) as VikunjaTask;
   }
 
@@ -153,9 +177,15 @@ export class VikunjaClient {
     taskId: number,
     updates: Partial<VikunjaTask>,
   ): Promise<FormattedTask> {
+    // Ensure due_date has timezone suffix if present
+    const updatesWithTimezone = {
+      ...updates,
+      due_date: this.ensureTimezone(updates.due_date),
+    };
+
     const updated = (await this.request(`/tasks/${taskId}`, {
       method: "POST",
-      body: JSON.stringify(updates),
+      body: JSON.stringify(updatesWithTimezone),
     })) as RawVikunjaTask;
 
     return this.formatTask(updated);
@@ -221,7 +251,8 @@ export function getVikunjaTools() {
             },
             due_date: {
               type: "string",
-              description: "Due date in ISO format (YYYY-MM-DD)",
+              description:
+                "Due date in RFC3339 format with timezone (e.g., '2025-12-07T09:00:00Z' or '2025-12-07T09:00:00-06:00')",
             },
           },
           required: ["projectId", "title"],
@@ -244,7 +275,11 @@ export function getVikunjaTools() {
             description: { type: "string" },
             done: { type: "boolean" },
             priority: { type: "number", minimum: 0, maximum: 5 },
-            due_date: { type: "string" },
+            due_date: {
+              type: "string",
+              description:
+                "Due date in RFC3339 format with timezone (e.g., '2025-12-07T09:00:00Z' or '2025-12-07T09:00:00-06:00')",
+            },
           },
           required: ["taskId"],
         },
