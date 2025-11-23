@@ -405,7 +405,8 @@ const App: React.FC = () => {
                         </span>
                         {topPriorityTask.calculatedPriority && (
                           <span className="ml-auto text-xs text-vikunja-600 font-mono">
-                            Score: {Math.round(topPriorityTask.calculatedPriority)}
+                            Score:{" "}
+                            {Math.round(topPriorityTask.calculatedPriority)}
                           </span>
                         )}
                       </div>
@@ -414,7 +415,6 @@ const App: React.FC = () => {
                         task={topPriorityTask}
                         onToggle={handleTaskToggle}
                         onSelect={setSelectedTask}
-                        allTasks={tasks}
                       />
                     </div>
                   )}
@@ -426,7 +426,6 @@ const App: React.FC = () => {
                       task={task}
                       onToggle={handleTaskToggle}
                       onSelect={setSelectedTask}
-                      allTasks={tasks}
                     />
                   ))}
                 </>

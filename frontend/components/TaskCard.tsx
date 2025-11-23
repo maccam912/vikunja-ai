@@ -5,7 +5,6 @@ interface TaskCardProps {
   task: Task;
   onToggle: (id: number) => void;
   onSelect: (task: Task) => void;
-  allTasks?: Task[]; // Optional: needed to show blocking/blocked relationships
 }
 
 const PriorityBadge: React.FC<{ priority: TaskPriority }> = ({ priority }) => {
@@ -45,7 +44,7 @@ const stripHtml = (html: string) => {
 };
 
 export const TaskCard: React.FC<TaskCardProps> = (
-  { task, onToggle, onSelect, allTasks },
+  { task, onToggle, onSelect },
 ) => {
   const handleCardClick = () => {
     // Prevent triggering select when clicking the checkbox
@@ -64,17 +63,6 @@ export const TaskCard: React.FC<TaskCardProps> = (
       r.relation_kind === TaskRelationKind.BLOCKING ||
       r.relation_kind === "blocking",
   ) || [];
-
-  // Get actual task objects if allTasks is provided
-  const blockingTaskObjects = allTasks
-    ? allTasks.filter((t) =>
-      blockingTasks.some((r) => r.other_task_id === t.id)
-    )
-    : [];
-
-  const blockedTaskObjects = allTasks
-    ? allTasks.filter((t) => blockedTasks.some((r) => r.other_task_id === t.id))
-    : [];
 
   return (
     <div
@@ -185,7 +173,11 @@ export const TaskCard: React.FC<TaskCardProps> = (
               className="flex items-center gap-1 text-red-600 font-medium"
               title={`Blocked by ${blockingTasks.length} task(s)`}
             >
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className="w-3.5 h-3.5"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path
                   fillRule="evenodd"
                   d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z"
@@ -201,7 +193,11 @@ export const TaskCard: React.FC<TaskCardProps> = (
               className="flex items-center gap-1 text-amber-600 font-medium"
               title={`Blocking ${blockedTasks.length} task(s)`}
             >
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className="w-3.5 h-3.5"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path
                   fillRule="evenodd"
                   d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"

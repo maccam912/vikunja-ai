@@ -250,8 +250,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
                           {blockingTask.title}
                         </div>
                         <div className="text-xs text-slate-500 mt-1">
-                          ID: {blockingTask.id} •{" "}
-                          {blockingTask.completed
+                          ID: {blockingTask.id} • {blockingTask.completed
                             ? (
                               <span className="text-green-600 font-medium">
                                 ✓ Completed
