@@ -103,26 +103,27 @@ app.post("/api/chat", async (c) => {
 
     // System prompt with temporal context
     const now = new Date();
-    const timezone = userTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timezone = userTimezone ||
+      Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const dateOptions: Intl.DateTimeFormatOptions = {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      timeZone: timezone
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: timezone,
     };
     const timeOptions: Intl.DateTimeFormatOptions = {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
       hour12: false,
-      timeZoneName: 'short',
-      timeZone: timezone
+      timeZoneName: "short",
+      timeZone: timezone,
     };
 
-    const formattedDate = now.toLocaleDateString('en-US', dateOptions);
-    const formattedTime = now.toLocaleTimeString('en-US', timeOptions);
+    const formattedDate = now.toLocaleDateString("en-US", dateOptions);
+    const formattedTime = now.toLocaleTimeString("en-US", timeOptions);
     const isoDateTime = now.toISOString();
 
     const systemPrompt = `You are a helpful Vikunja Task Manager assistant.
