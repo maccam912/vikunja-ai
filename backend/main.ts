@@ -17,6 +17,7 @@ const PORT = parseInt(Deno.env.get("PORT") || "8000", 10);
 const PHOENIX_ENDPOINT = Deno.env.get("PHOENIX_ENDPOINT") ||
   "https://phoenix.rackspace.koski.co";
 const PHOENIX_API_KEY = Deno.env.get("PHOENIX_API_KEY");
+const DEFAULT_TIMEZONE = Deno.env.get("DEFAULT_TIMEZONE") || "America/Chicago";
 
 interface ChatRequestBody {
   messages: ChatMessage[];
@@ -110,8 +111,7 @@ app.post("/api/chat", async (c) => {
 
     // System prompt with temporal context
     const now = new Date();
-    const timezone = userTimezone ||
-      Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timezone = userTimezone || DEFAULT_TIMEZONE;
 
     const dateOptions: Intl.DateTimeFormatOptions = {
       weekday: "long",
@@ -139,7 +139,7 @@ You are connected to the user's Vikunja instance (Project ID: ${projectId}).
 ## Current Date and Time Context
 - Current Date and Time: ${formattedDate} at ${formattedTime}
 - ISO Format: ${isoDateTime}
-- User Timezone: ${timezone}
+- User Timezone: ${timezone} (defaults to America/Chicago - Central Time)
 
 When users mention relative dates like "tomorrow", "next week", "in 3 days", etc.,
 calculate the actual date based on the current date and time above.

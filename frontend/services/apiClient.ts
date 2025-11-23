@@ -31,10 +31,10 @@ export async function sendChatMessage(
   request: ChatRequest,
 ): Promise<ChatResponse> {
   // Automatically include user's timezone if not already provided
+  // Defaults to America/Chicago (Central Time)
   const requestWithTimezone = {
     ...request,
-    userTimezone: request.userTimezone ||
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
+    userTimezone: request.userTimezone || "America/Chicago",
   };
 
   const response = await fetch(`${API_BASE_URL}/api/chat`, {
