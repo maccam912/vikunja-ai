@@ -1,5 +1,6 @@
 import React from "react";
 import { Task, TaskPriority, TaskRelationKind } from "../types";
+import { calculatePriorityBreakdown } from "../utils/priorityCalculation";
 
 interface TaskDetailsModalProps {
   task: Task | null;
@@ -188,10 +189,10 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
             </div>
           </div>
 
-          {/* Calculated Priority Score */}
-          {task.calculatedPriority !== undefined && (
+          {/* Calculated Priority Score with Breakdown */}
+          {task.calculatedPriority !== undefined && allTasks && (
             <div className="mb-6 p-4 bg-vikunja-50 border border-vikunja-200 rounded-lg">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="text-xs font-semibold text-vikunja-600 uppercase tracking-wider mb-1">
                     Calculated Priority Score
@@ -208,9 +209,133 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
               </div>
-              <p className="text-xs text-vikunja-600 mt-2">
-                Based on Vikunja priority, due date, and task dependencies
-              </p>
+
+              {/* Priority Breakdown */}
+              {(() => {
+                const breakdown = calculatePriorityBreakdown(task, allTasks);
+                return (
+                  <div className="space-y-2">
+                    <div className="text-xs font-semibold text-vikunja-700 uppercase tracking-wider mb-2">
+                      Score Components:
+                    </div>
+
+                    {/* Base Priority */}
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span className="text-slate-700">Base Priority</span>
+                        <span className="text-xs text-slate-500">
+                          (Level {task.priority} × 100)
+                        </span>
+                      </div>
+                      <span className="font-mono font-semibold text-slate-900">
+                        {breakdown.baseScore}
+                      </span>
+                    </div>
+
+                    {/* Due Date Score */}
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            breakdown.dueDateScore > 0
+                              ? "bg-orange-500"
+                              : "bg-slate-300"
+                          }`}
+                        >
+                        </div>
+                        <span className="text-slate-700">Due Date Urgency</span>
+                        {breakdown.dueDateScore === 0 && (
+                          <span className="text-xs text-slate-500">
+                            (no due date)
+                          </span>
+                        )}
+                        {breakdown.dueDateScore === 75 && (
+                          <span className="text-xs text-slate-500">
+                            (due within 7 days)
+                          </span>
+                        )}
+                        {breakdown.dueDateScore === 150 && (
+                          <span className="text-xs text-slate-500">
+                            (due within 3 days)
+                          </span>
+                        )}
+                        {breakdown.dueDateScore === 300 && (
+                          <span className="text-xs text-orange-600 font-medium">
+                            (due within 24 hours)
+                          </span>
+                        )}
+                        {breakdown.dueDateScore === 500 && (
+                          <span className="text-xs text-red-600 font-bold">
+                            (OVERDUE!)
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-mono font-semibold text-slate-900">
+                        +{breakdown.dueDateScore}
+                      </span>
+                    </div>
+
+                    {/* Blocking Bonus */}
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            breakdown.blockingBonus > 0
+                              ? "bg-amber-500"
+                              : "bg-slate-300"
+                          }`}
+                        >
+                        </div>
+                        <span className="text-slate-700">Blocking Bonus</span>
+                        {breakdown.blockingBonus > 0 && (
+                          <span className="text-xs text-slate-500">
+                            (unblocks other tasks)
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-mono font-semibold text-slate-900">
+                        +{Math.round(breakdown.blockingBonus)}
+                      </span>
+                    </div>
+
+                    {/* Blocked Penalty */}
+                    {breakdown.isBlocked && (
+                      <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">
+                        <div className="flex items-center gap-2 text-sm">
+                          <svg
+                            className="w-4 h-4 text-red-600"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-red-700 font-semibold">
+                            BLOCKED - Priority reduced to ~1%
+                          </span>
+                        </div>
+                        <div className="text-xs text-red-600 mt-1 ml-6">
+                          Score before penalty: {Math.round(
+                            breakdown.totalBeforeBlocked,
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Final Score */}
+                    <div className="mt-3 pt-3 border-t border-vikunja-300 flex items-center justify-between text-sm font-bold">
+                      <span className="text-vikunja-700">TOTAL SCORE</span>
+                      <span className="font-mono text-lg text-vikunja-800">
+                        {Math.round(breakdown.finalScore)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
