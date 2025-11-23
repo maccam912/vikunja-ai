@@ -12,6 +12,7 @@ export interface ChatRequest {
   projectId: number;
   vikunjaUrl: string;
   vikunjaToken: string;
+  userTimezone?: string;
 }
 
 export interface ChatResponse {
@@ -29,12 +30,18 @@ export interface ChatResponse {
 export async function sendChatMessage(
   request: ChatRequest,
 ): Promise<ChatResponse> {
+  // Automatically include user's timezone if not already provided
+  const requestWithTimezone = {
+    ...request,
+    userTimezone: request.userTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
+
   const response = await fetch(`${API_BASE_URL}/api/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(request),
+    body: JSON.stringify(requestWithTimezone),
   });
 
   if (!response.ok) {
