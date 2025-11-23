@@ -81,7 +81,7 @@ export class VikunjaClient {
       title: task.title,
       description: task.description || "",
       completed: task.done || false,
-      priority: task.priority || 0,
+      priority: task.priority || 1, // Treat unset (0) as low priority (1)
       dueDate: task.due_date && !task.due_date.startsWith("0001-01-01")
         ? task.due_date
         : undefined,
