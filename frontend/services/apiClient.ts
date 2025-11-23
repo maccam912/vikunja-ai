@@ -33,7 +33,8 @@ export async function sendChatMessage(
   // Automatically include user's timezone if not already provided
   const requestWithTimezone = {
     ...request,
-    userTimezone: request.userTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    userTimezone: request.userTimezone ||
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
   };
 
   const response = await fetch(`${API_BASE_URL}/api/chat`, {

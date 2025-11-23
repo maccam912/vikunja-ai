@@ -70,7 +70,14 @@ app.get("/api/health", (c) => {
 app.post("/api/chat", async (c) => {
   try {
     const body = await c.req.json() as ChatRequestBody;
-    const { messages, projectId, vikunjaUrl, vikunjaToken, sessionId, userTimezone } = body;
+    const {
+      messages,
+      projectId,
+      vikunjaUrl,
+      vikunjaToken,
+      sessionId,
+      userTimezone,
+    } = body;
 
     if (!messages || !projectId || !vikunjaUrl || !vikunjaToken) {
       return c.json({ error: "Missing required fields" }, 400);
