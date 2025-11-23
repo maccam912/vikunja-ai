@@ -250,6 +250,11 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
                             (no due date)
                           </span>
                         )}
+                        {breakdown.dueDateScore === 30 && (
+                          <span className="text-xs text-slate-500">
+                            (due later)
+                          </span>
+                        )}
                         {breakdown.dueDateScore === 75 && (
                           <span className="text-xs text-slate-500">
                             (due within 7 days)
@@ -275,6 +280,37 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
                         +{breakdown.dueDateScore}
                       </span>
                     </div>
+
+                    {/* Start Date Modifier */}
+                    {breakdown.startDateModifier !== 0 && (
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              breakdown.startDateModifier > 0
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            }`}
+                          >
+                          </div>
+                          <span className="text-slate-700">Start Date Modifier</span>
+                          {breakdown.startDateModifier > 0
+                            ? (
+                              <span className="text-xs text-slate-500">
+                                (started)
+                              </span>
+                            )
+                            : (
+                              <span className="text-xs text-slate-500">
+                                (starts in future)
+                              </span>
+                            )}
+                        </div>
+                        <span className={`font-mono font-semibold ${breakdown.startDateModifier > 0 ? "text-green-600" : "text-red-600"}`}>
+                          {breakdown.startDateModifier > 0 ? "+" : ""}{Math.round(breakdown.startDateModifier)}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Blocking Bonus */}
                     <div className="flex items-center justify-between text-sm">
