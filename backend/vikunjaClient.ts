@@ -8,7 +8,7 @@ export interface VikunjaTask {
   description: string;
   done: boolean;
   priority: number;
-  due_date?: string;
+  due_date?: string | null;
   created: string;
   updated: string;
 }
@@ -31,7 +31,7 @@ interface RawVikunjaTask {
   description?: string;
   done?: boolean;
   priority?: number;
-  due_date?: string;
+  due_date?: string | null;
   assignees?: Array<{ username?: string }>;
   labels?: Array<{ title?: string } | string>;
   identifier?: string;
@@ -45,7 +45,7 @@ interface FormattedTask {
   description: string;
   completed: boolean;
   priority: number;
-  dueDate?: string;
+  dueDate?: string | null;
   assignee?: string;
   tags: string[];
   identifier?: string;
@@ -68,8 +68,15 @@ export class VikunjaClient {
   /**
    * Ensures a date string has RFC3339 timezone format required by Vikunja.
    * Appends "Z" (UTC) if timezone is missing.
+   * Preserves explicit null values to allow clearing dates.
    */
-  private ensureTimezone(dateStr: string | undefined): string | undefined {
+  private ensureTimezone(
+    dateStr: string | null | undefined,
+  ): string | null | undefined {
+    // Preserve explicit null (used to clear dates)
+    if (dateStr === null) return null;
+
+    // Return undefined if not provided
     if (!dateStr) return undefined;
 
     // Check if already has timezone (ends with Z or +/-HH:MM)
@@ -158,10 +165,10 @@ export class VikunjaClient {
       title: string;
       description?: string;
       priority?: number;
-      due_date?: string;
+      due_date?: string | null;
     },
   ): Promise<VikunjaTask> {
-    // Ensure due_date has timezone suffix
+    // Ensure due_date has timezone suffix (preserves null for clearing)
     const taskWithTimezone = {
       ...task,
       due_date: this.ensureTimezone(task.due_date),
