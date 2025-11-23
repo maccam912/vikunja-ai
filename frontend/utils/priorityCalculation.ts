@@ -45,16 +45,20 @@ function getDueDateScore(dueDate?: string): number {
 }
 
 /**
- * Check if a task is blocked by another task
+ * Get tasks that block this task
  */
-export function isTaskBlocked(task: Task): boolean {
-  if (!task.relatedTasks || task.relatedTasks.length === 0) return false;
+export function getBlockingTasks(task: Task, allTasks: Task[]): Task[] {
+  if (!task.relatedTasks || task.relatedTasks.length === 0) return [];
 
-  return task.relatedTasks.some(
-    (relation) =>
-      relation.relation_kind === TaskRelationKind.BLOCKED ||
-      relation.relation_kind === "blocked",
-  );
+  const blockingTaskIds = task.relatedTasks
+    .filter(
+      (relation) =>
+        relation.relation_kind === TaskRelationKind.BLOCKED ||
+        relation.relation_kind === "blocked",
+    )
+    .map((relation) => relation.other_task_id);
+
+  return allTasks.filter((t) => blockingTaskIds.includes(t.id));
 }
 
 /**
@@ -75,20 +79,16 @@ export function getBlockedTasks(task: Task, allTasks: Task[]): Task[] {
 }
 
 /**
- * Get tasks that block this task
+ * Check if a task is blocked by incomplete tasks
  */
-export function getBlockingTasks(task: Task, allTasks: Task[]): Task[] {
-  if (!task.relatedTasks || task.relatedTasks.length === 0) return [];
+export function isTaskBlocked(task: Task, allTasks: Task[]): boolean {
+  if (!task.relatedTasks || task.relatedTasks.length === 0) return false;
 
-  const blockingTaskIds = task.relatedTasks
-    .filter(
-      (relation) =>
-        relation.relation_kind === TaskRelationKind.BLOCKED ||
-        relation.relation_kind === "blocked",
-    )
-    .map((relation) => relation.other_task_id);
+  // Get the tasks that block this task
+  const blockingTasks = getBlockingTasks(task, allTasks);
 
-  return allTasks.filter((t) => blockingTaskIds.includes(t.id));
+  // Only consider the task blocked if at least one blocking task is incomplete
+  return blockingTasks.some((blockingTask) => !blockingTask.completed);
 }
 
 /**
@@ -116,8 +116,8 @@ function calculateTaskPriority(
   // Add due date urgency
   score += getDueDateScore(task.dueDate);
 
-  // Check if this task is blocked
-  const blocked = isTaskBlocked(task);
+  // Check if this task is blocked by incomplete tasks
+  const blocked = isTaskBlocked(task, allTasks);
 
   if (blocked) {
     // Blocked tasks get very low priority
