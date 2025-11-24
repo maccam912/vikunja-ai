@@ -7,16 +7,27 @@ import { Task, TaskRelationKind } from "../types";
  * - Task dependencies (blocked tasks have lower priority, blocking tasks inherit blocked task priorities)
  */
 
-const PRIORITY_WEIGHTS = {
-  BASE_PRIORITY: 100, // Weight for Vikunja priority (1-5 becomes 100-500)
-  DUE_DATE_URGENT: 300, // Additional points for tasks due within 24 hours
-  DUE_DATE_SOON: 150, // Additional points for tasks due within 3 days
-  DUE_DATE_THIS_WEEK: 75, // Additional points for tasks due within 7 days
-  DUE_DATE_OVERDUE: 500, // Additional points for overdue tasks
-  START_DATE_PAST_BONUS: 50, // Additional points if the start date is in the past
-  START_DATE_FUTURE_PENALTY: 50, // Penalty if the start date is in the future
-  BLOCKED_PENALTY: 0.01, // Multiplier for blocked tasks (nearly zero priority)
+const TASKWARRIOR_WEIGHTS = {
+  // Taskwarrior urgency weights approximations
+  PRIORITY_LEVELS: [0, 1, 3.9, 5.9, 7, 8], // Map Vikunja 0-5 priority to Taskwarrior urgency
+  DUE_RANGE_DAYS: 14, // Window where due dates start to matter
+  DUE_MAX: 12, // Max urgency contribution for due/overdue tasks
+  BLOCKING_BONUS: 8, // Bonus for tasks blocking others
+  BLOCKING_INHERITANCE: 0.2, // Portion of blocked tasks' urgency that flows upward
+  BLOCKED_PENALTY: -5, // Penalty when a task is blocked
+  START_DATE_PAST_BONUS: 1.5, // Bonus if start date has passed
+  START_DATE_FUTURE_PENALTY: -3, // Penalty if start date is in the future
+  AGE_DECAY_DAYS: 45, // Age urgency tapers off after ~1.5 months
+  AGE_MAX: 2, // Cap age to modest urgency bump
 };
+
+function getPriorityScore(priority: number): number {
+  const index = Math.max(
+    0,
+    Math.min(priority, TASKWARRIOR_WEIGHTS.PRIORITY_LEVELS.length - 1),
+  );
+  return TASKWARRIOR_WEIGHTS.PRIORITY_LEVELS[index];
+}
 
 /**
  * Evaluate due date presence + urgency
@@ -36,18 +47,13 @@ function evaluateDueDate(
   const diffMs = due.getTime() - now.getTime();
   const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
-  if (diffDays < 0) {
-    // Overdue
-    return { score: PRIORITY_WEIGHTS.DUE_DATE_OVERDUE, hasDueDate: true };
-  } else if (diffDays < 1) {
-    // Due within 24 hours
-    return { score: PRIORITY_WEIGHTS.DUE_DATE_URGENT, hasDueDate: true };
-  } else if (diffDays < 3) {
-    // Due within 3 days
-    return { score: PRIORITY_WEIGHTS.DUE_DATE_SOON, hasDueDate: true };
-  } else if (diffDays < 7) {
-    // Due within a week
-    return { score: PRIORITY_WEIGHTS.DUE_DATE_THIS_WEEK, hasDueDate: true };
+  if (diffDays <= 0) {
+    return { score: TASKWARRIOR_WEIGHTS.DUE_MAX, hasDueDate: true };
+  }
+
+  if (diffDays <= TASKWARRIOR_WEIGHTS.DUE_RANGE_DAYS) {
+    const ratio = 1 - (diffDays / TASKWARRIOR_WEIGHTS.DUE_RANGE_DAYS);
+    return { score: ratio * TASKWARRIOR_WEIGHTS.DUE_MAX, hasDueDate: true };
   }
 
   return { score: 0, hasDueDate: true };
@@ -67,10 +73,30 @@ function getStartDateScore(startDate?: string): number {
   if (Number.isNaN(start.getTime())) return 0;
 
   if (start.getTime() > now.getTime()) {
-    return -PRIORITY_WEIGHTS.START_DATE_FUTURE_PENALTY;
+    return TASKWARRIOR_WEIGHTS.START_DATE_FUTURE_PENALTY;
   }
 
-  return PRIORITY_WEIGHTS.START_DATE_PAST_BONUS;
+  return TASKWARRIOR_WEIGHTS.START_DATE_PAST_BONUS;
+}
+
+function getAgeScore(updated?: string): number {
+  if (!updated) return 0;
+
+  const updatedDate = new Date(updated);
+  if (Number.isNaN(updatedDate.getTime())) return 0;
+
+  const now = new Date();
+  const diffDays = (now.getTime() - updatedDate.getTime()) /
+    (1000 * 60 * 60 * 24);
+
+  if (diffDays <= 0) return 0;
+
+  const normalizedAge = Math.min(
+    1,
+    diffDays / TASKWARRIOR_WEIGHTS.AGE_DECAY_DAYS,
+  );
+
+  return normalizedAge * TASKWARRIOR_WEIGHTS.AGE_MAX;
 }
 
 /**
@@ -139,39 +165,37 @@ function calculateTaskPriority(
     return 0;
   }
 
-  // Base priority from Vikunja (0-5 scale)
-  let score = task.priority * PRIORITY_WEIGHTS.BASE_PRIORITY;
+  const baseScore = getPriorityScore(task.priority);
+  const { score: dueDateScore } = evaluateDueDate(task.dueDate);
+  const startDateScore = getStartDateScore(task.startDate);
+  const ageScore = getAgeScore(task.updated);
 
-  // Add due date urgency
-  score += evaluateDueDate(task.dueDate).score;
-
-  // Start date adjustments
-  score += getStartDateScore(task.startDate);
-
-  // Check if this task is blocked by incomplete tasks
   const blocked = isTaskBlocked(task, allTasks);
 
-  if (blocked) {
-    // Blocked tasks get very low priority
-    score *= PRIORITY_WEIGHTS.BLOCKED_PENALTY;
-  } else {
-    // If not blocked, add priorities from tasks that this task blocks
-    const blockedTasks = getBlockedTasks(task, allTasks);
+  const blockedTasks = getBlockedTasks(task, allTasks).filter(
+    (t) => !t.completed,
+  );
 
-    for (const blockedTask of blockedTasks) {
-      if (!blockedTask.completed) {
-        // Add the blocked task's priority to this task
-        const blockedPriority = calculateTaskPriority(
-          blockedTask,
-          allTasks,
-          new Set(visited),
-        );
-        score += blockedPriority * 0.5; // Add 50% of blocked task's priority
-      }
-    }
+  let blockingBonus = 0;
+  if (blockedTasks.length > 0) {
+    blockingBonus += TASKWARRIOR_WEIGHTS.BLOCKING_BONUS;
   }
 
-  return score;
+  for (const blockedTask of blockedTasks) {
+    const blockedPriority = calculateTaskPriority(
+      blockedTask,
+      allTasks,
+      new Set(visited),
+    );
+    blockingBonus += blockedPriority * TASKWARRIOR_WEIGHTS.BLOCKING_INHERITANCE;
+  }
+
+  const totalBeforeBlocked = baseScore + dueDateScore + startDateScore +
+    ageScore + blockingBonus;
+
+  return blocked
+    ? totalBeforeBlocked + TASKWARRIOR_WEIGHTS.BLOCKED_PENALTY
+    : totalBeforeBlocked;
 }
 
 /**
@@ -182,6 +206,7 @@ export interface PriorityBreakdown {
   dueDateScore: number;
   hasDueDate: boolean;
   startDateScore: number;
+  ageScore: number;
   blockingBonus: number;
   isBlocked: boolean;
   totalBeforeBlocked: number;
@@ -202,6 +227,7 @@ export function calculatePriorityBreakdown(
       dueDateScore: 0,
       hasDueDate: false,
       startDateScore: 0,
+      ageScore: 0,
       blockingBonus: 0,
       isBlocked: false,
       totalBeforeBlocked: 0,
@@ -210,7 +236,7 @@ export function calculatePriorityBreakdown(
   }
 
   // Base priority from Vikunja (0-5 scale)
-  const baseScore = task.priority * PRIORITY_WEIGHTS.BASE_PRIORITY;
+  const baseScore = getPriorityScore(task.priority);
 
   // Add due date urgency
   const { score: dueDateScore, hasDueDate } = evaluateDueDate(task.dueDate);
@@ -218,31 +244,33 @@ export function calculatePriorityBreakdown(
   // Start date adjustment
   const startDateScore = getStartDateScore(task.startDate);
 
+  const ageScore = getAgeScore(task.updated);
+
   // Check if this task is blocked by incomplete tasks
   const isBlocked = isTaskBlocked(task, allTasks);
 
-  let blockingBonus = 0;
-  if (!isBlocked) {
-    // If not blocked, add priorities from tasks that this task blocks
-    const blockedTasks = getBlockedTasks(task, allTasks);
+  const blockedTasks = getBlockedTasks(task, allTasks).filter(
+    (t) => !t.completed,
+  );
 
-    for (const blockedTask of blockedTasks) {
-      if (!blockedTask.completed) {
-        // Add the blocked task's priority to this task
-        const blockedPriority = calculateTaskPriority(
-          blockedTask,
-          allTasks,
-          new Set<number>([task.id]),
-        );
-        blockingBonus += blockedPriority * 0.5; // Add 50% of blocked task's priority
-      }
-    }
+  let blockingBonus = 0;
+  if (blockedTasks.length > 0) {
+    blockingBonus += TASKWARRIOR_WEIGHTS.BLOCKING_BONUS;
+  }
+
+  for (const blockedTask of blockedTasks) {
+    const blockedPriority = calculateTaskPriority(
+      blockedTask,
+      allTasks,
+      new Set<number>([task.id]),
+    );
+    blockingBonus += blockedPriority * TASKWARRIOR_WEIGHTS.BLOCKING_INHERITANCE;
   }
 
   const totalBeforeBlocked = baseScore + dueDateScore + startDateScore +
-    blockingBonus;
+    ageScore + blockingBonus;
   const finalScore = isBlocked
-    ? totalBeforeBlocked * PRIORITY_WEIGHTS.BLOCKED_PENALTY
+    ? totalBeforeBlocked + TASKWARRIOR_WEIGHTS.BLOCKED_PENALTY
     : totalBeforeBlocked;
 
   return {
@@ -250,6 +278,7 @@ export function calculatePriorityBreakdown(
     dueDateScore,
     hasDueDate,
     startDateScore,
+    ageScore,
     blockingBonus,
     isBlocked,
     totalBeforeBlocked,
