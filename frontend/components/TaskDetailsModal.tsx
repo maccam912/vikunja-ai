@@ -75,18 +75,18 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]"
+        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between bg-slate-50">
+        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-start justify-between bg-slate-50 dark:bg-slate-800">
           <div className="pr-8">
             <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <span className="font-mono text-xs text-slate-400">
+              <span className="font-mono text-xs text-slate-400 dark:text-slate-300">
                 #{task.identifier || task.id}
               </span>
               {task.completed && (
-                <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded">
+                <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-200 text-xs font-bold rounded">
                   COMPLETED
                 </span>
               )}
@@ -114,7 +114,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
                 </a>
               )}
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 leading-tight">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
               {task.title}
             </h2>
           </div>

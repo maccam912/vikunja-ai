@@ -115,13 +115,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center flex-shrink-0">
+      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
+        <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center flex-shrink-0">
           <div>
-            <h2 className="text-xl font-bold text-slate-800">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
               Vikunja Configuration
             </h2>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-slate-500 dark:text-slate-300 mt-1">
               Connect to your Vikunja instance
             </p>
           </div>
@@ -136,7 +136,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
 
         <div className="p-6 space-y-4 overflow-y-auto flex-1">
           {error && (
-            <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200 flex flex-col gap-2">
+            <div className="p-3 bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-200 text-sm rounded-lg border border-red-200 dark:border-red-700 flex flex-col gap-2">
               <div className="flex items-center gap-2 font-bold">
                 <svg
                   className="w-5 h-5 shrink-0"
@@ -154,14 +154,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
                 <span>Connection Failed</span>
               </div>
               <p className="font-mono text-xs break-all">{error}</p>
-              <p className="text-xs text-slate-600 mt-1">
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                 Check console (F12) for full details.
               </p>
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
               Server URL
             </label>
             <input
@@ -169,15 +169,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://vikunja.yourdomain.com"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-vikunja-500 focus:border-vikunja-500 outline-none transition-all"
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-vikunja-500 focus:border-vikunja-500 outline-none transition-all"
             />
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-300 mt-1">
               Just the base URL, don't include /api/v1
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
               API Token
             </label>
             <div className="relative">
@@ -186,12 +186,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 placeholder="vk_..."
-                className="w-full pl-3 pr-10 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-vikunja-500 focus:border-vikunja-500 outline-none transition-all font-mono text-sm"
+                className="w-full pl-3 pr-10 py-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-vikunja-500 focus:border-vikunja-500 outline-none transition-all font-mono text-sm"
               />
               <button
                 type="button"
                 onClick={() => setShowToken(!showToken)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:hover:text-slate-100 p-1"
               >
                 {showToken
                   ? (
@@ -245,13 +245,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
 
           {projects.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
                 Select Project
               </label>
               <select
                 value={projectId || ""}
                 onChange={(e) => setProjectId(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-vikunja-500 focus:border-vikunja-500 outline-none transition-all"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-vikunja-500 focus:border-vikunja-500 outline-none transition-all"
               >
                 <option value="">-- Choose a project --</option>
                 {projects.map((proj) => (
@@ -262,7 +262,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
               Custom Instructions (Optional)
             </label>
             <textarea
@@ -270,16 +270,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = (
               onChange={(e) => setCustomInstructions(e.target.value)}
               placeholder="e.g., Always mark tasks as urgent, prefer start dates over due dates..."
               rows={3}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-vikunja-500 focus:border-vikunja-500 outline-none transition-all resize-none"
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-vikunja-500 focus:border-vikunja-500 outline-none transition-all resize-none"
             />
           </div>
         </div>
 
-        <div className="p-6 border-t border-slate-100 flex gap-3 flex-shrink-0">
+        <div className="p-6 border-t border-slate-100 dark:border-slate-700 flex gap-3 flex-shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-all"
+            className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 font-medium transition-all"
           >
             Cancel
           </button>

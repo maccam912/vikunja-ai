@@ -28,11 +28,11 @@ export const Chat: React.FC<ChatProps> = (
   };
 
   return (
-    <div className="flex flex-col h-full bg-white shadow-xl lg:shadow-none">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-800 shadow-xl lg:shadow-none">
       {/* Header - Only show on desktop/large view or when it acts as a sidebar header */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
+      <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-vikunja-100 rounded-lg text-vikunja-600">
+          <div className="p-2 bg-vikunja-100 dark:bg-vikunja-900/40 rounded-lg text-vikunja-600 dark:text-vikunja-200">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -48,20 +48,20 @@ export const Chat: React.FC<ChatProps> = (
             </svg>
           </div>
           <div>
-            <h2 className="font-bold text-slate-800">AI Assistant</h2>
-            <p className="text-xs text-slate-500">Powered by Gemini 2.5</p>
+            <h2 className="font-bold text-slate-800 dark:text-slate-100">AI Assistant</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-300">Powered by Gemini 2.5</p>
           </div>
         </div>
       </div>
 
       {/* Messages Area */}
       <div
-        className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50"
+        className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900"
         ref={scrollRef}
       >
         {messages.length === 0 && (
           <div className="text-center py-10 px-6">
-            <div className="w-16 h-16 bg-white rounded-full shadow-sm mx-auto flex items-center justify-center mb-4 text-vikunja-400">
+            <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full shadow-sm mx-auto flex items-center justify-center mb-4 text-vikunja-400">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -76,10 +76,10 @@ export const Chat: React.FC<ChatProps> = (
                 />
               </svg>
             </div>
-            <p className="text-slate-600 font-medium mb-1">
+            <p className="text-slate-600 dark:text-slate-200 font-medium mb-1">
               How can I help you manage tasks?
             </p>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-400 dark:text-slate-300">
               Try "Add a high priority task to buy milk" or "Reschedule task 2
               for tomorrow".
             </p>
@@ -97,13 +97,13 @@ export const Chat: React.FC<ChatProps> = (
               className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
                 msg.role === "user"
                   ? "bg-vikunja-600 text-white rounded-tr-none"
-                  : "bg-white text-slate-800 border border-slate-100 rounded-tl-none"
+                  : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-700 rounded-tl-none"
               }`}
             >
               {msg.role === "model" && msg.isToolOutput
                 ? (
-                  <div className="font-mono text-xs text-slate-500 border-l-2 border-vikunja-200 pl-2 py-1 my-1">
-                    <div className="flex items-center gap-1.5 mb-1 text-vikunja-600 font-bold uppercase tracking-wider text-[10px]">
+                  <div className="font-mono text-xs text-slate-500 dark:text-slate-300 border-l-2 border-vikunja-200 dark:border-vikunja-500/50 pl-2 py-1 my-1">
+                    <div className="flex items-center gap-1.5 mb-1 text-vikunja-600 dark:text-vikunja-200 font-bold uppercase tracking-wider text-[10px]">
                       <svg
                         className="w-3 h-3"
                         fill="none"
@@ -133,7 +133,7 @@ export const Chat: React.FC<ChatProps> = (
 
         {isLoading && (
           <div className="flex justify-start animate-in fade-in duration-300">
-            <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm flex items-center gap-3">
+            <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm flex items-center gap-3">
               <div className="flex gap-1">
                 <div className="w-2 h-2 bg-vikunja-400 rounded-full animate-bounce">
                 </div>
@@ -143,7 +143,7 @@ export const Chat: React.FC<ChatProps> = (
                 </div>
               </div>
               {statusMessage && (
-                <span className="text-xs text-slate-500 font-mono border-l border-slate-200 pl-3">
+                <span className="text-xs text-slate-500 dark:text-slate-300 font-mono border-l border-slate-200 dark:border-slate-700 pl-3">
                   {statusMessage}
                 </span>
               )}
@@ -153,14 +153,14 @@ export const Chat: React.FC<ChatProps> = (
       </div>
 
       {/* Input Area */}
-      <div className="p-3 bg-white border-t border-slate-100 flex-shrink-0 pb-[env(safe-area-inset-bottom)]">
+      <div className="p-3 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 flex-shrink-0 pb-[env(safe-area-inset-bottom)]">
         <form onSubmit={handleSubmit} className="relative">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your command..."
-            className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-vikunja-500/20 focus:border-vikunja-500 transition-all placeholder:text-slate-400 text-sm"
+            className="w-full pl-4 pr-12 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-vikunja-500/20 focus:border-vikunja-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-300 text-sm text-slate-900 dark:text-slate-100"
           />
           <button
             type="submit"
