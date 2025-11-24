@@ -109,13 +109,39 @@ export const TaskCard: React.FC<TaskCardProps> = (
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <h3
-            className={`text-base font-medium text-slate-900 leading-snug ${
-              task.completed ? "line-through text-slate-500" : ""
-            }`}
-          >
-            {task.title}
-          </h3>
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <h3
+              className={`text-base font-medium text-slate-900 leading-snug ${
+                task.completed ? "line-through text-slate-500" : ""
+              }`}
+            >
+              {task.title}
+            </h3>
+            {task.webUrl && (
+              <a
+                href={task.webUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 text-xs font-medium text-vikunja-600 hover:text-vikunja-700"
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M14 3h7v7m0-7L10 14m-4 7h7m-7 0v-7m0 7L21 3"
+                  />
+                </svg>
+                Open in Vikunja
+              </a>
+            )}
+          </div>
           <PriorityBadge priority={task.priority} />
         </div>
 
