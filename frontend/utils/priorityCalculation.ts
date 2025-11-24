@@ -227,6 +227,7 @@ export function calculatePriorityBreakdown(
       dueDateScore: 0,
       hasDueDate: false,
       startDateScore: 0,
+      ageScore: 0,
       blockingBonus: 0,
       isBlocked: false,
       totalBeforeBlocked: 0,
