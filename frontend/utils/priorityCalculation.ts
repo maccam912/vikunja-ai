@@ -22,7 +22,10 @@ const TASKWARRIOR_WEIGHTS = {
 };
 
 function getPriorityScore(priority: number): number {
-  const index = Math.max(0, Math.min(priority, TASKWARRIOR_WEIGHTS.PRIORITY_LEVELS.length - 1));
+  const index = Math.max(
+    0,
+    Math.min(priority, TASKWARRIOR_WEIGHTS.PRIORITY_LEVELS.length - 1),
+  );
   return TASKWARRIOR_WEIGHTS.PRIORITY_LEVELS[index];
 }
 
@@ -88,7 +91,10 @@ function getAgeScore(updated?: string): number {
 
   if (diffDays <= 0) return 0;
 
-  const normalizedAge = Math.min(1, diffDays / TASKWARRIOR_WEIGHTS.AGE_DECAY_DAYS);
+  const normalizedAge = Math.min(
+    1,
+    diffDays / TASKWARRIOR_WEIGHTS.AGE_DECAY_DAYS,
+  );
 
   return normalizedAge * TASKWARRIOR_WEIGHTS.AGE_MAX;
 }
@@ -184,8 +190,8 @@ function calculateTaskPriority(
     blockingBonus += blockedPriority * TASKWARRIOR_WEIGHTS.BLOCKING_INHERITANCE;
   }
 
-  const totalBeforeBlocked =
-    baseScore + dueDateScore + startDateScore + ageScore + blockingBonus;
+  const totalBeforeBlocked = baseScore + dueDateScore + startDateScore +
+    ageScore + blockingBonus;
 
   return blocked
     ? totalBeforeBlocked + TASKWARRIOR_WEIGHTS.BLOCKED_PENALTY

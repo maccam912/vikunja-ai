@@ -57,7 +57,9 @@ describe("priority calculation", () => {
       breakdown.startDateScore;
 
     expect(breakdown.blockingBonus).toBeGreaterThan(0);
-    expect(calculatedBlocker.calculatedPriority ?? 0).toBeGreaterThan(baseScore);
+    expect(calculatedBlocker.calculatedPriority ?? 0).toBeGreaterThan(
+      baseScore,
+    );
   });
 
   it("retains the blocking bonus even if the blocker is itself blocked", () => {
@@ -101,8 +103,8 @@ describe("priority calculation", () => {
     const blocker = calculatePriorities(tasks).find((task) => task.id === 1)!;
     const breakdown = calculatePriorityBreakdown(blocker, tasks);
 
-    const scoreWithoutBonus =
-      breakdown.baseScore + breakdown.dueDateScore + breakdown.startDateScore +
+    const scoreWithoutBonus = breakdown.baseScore + breakdown.dueDateScore +
+      breakdown.startDateScore +
       breakdown.ageScore + (breakdown.isBlocked ? -5 : 0);
 
     expect(breakdown.isBlocked).toBe(true);
@@ -149,7 +151,7 @@ describe("priority calculation", () => {
     expect(breakdown.blockingBonus).toBeGreaterThan(8);
     expect(breakdown.finalScore).toBeGreaterThan(
       breakdown.baseScore + breakdown.dueDateScore +
-      breakdown.startDateScore + breakdown.ageScore,
+        breakdown.startDateScore + breakdown.ageScore,
     );
   });
 });
