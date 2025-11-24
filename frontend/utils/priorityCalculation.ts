@@ -239,8 +239,8 @@ export function calculatePriorityBreakdown(
     }
   }
 
-  const totalBeforeBlocked =
-    baseScore + dueDateScore + startDateScore + blockingBonus;
+  const totalBeforeBlocked = baseScore + dueDateScore + startDateScore +
+    blockingBonus;
   const finalScore = isBlocked
     ? totalBeforeBlocked * PRIORITY_WEIGHTS.BLOCKED_PENALTY
     : totalBeforeBlocked;

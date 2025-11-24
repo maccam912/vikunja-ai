@@ -213,7 +213,9 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
               {/* Priority Breakdown */}
               {(() => {
                 const breakdown = calculatePriorityBreakdown(task, allTasks);
-                const startDate = task.startDate ? new Date(task.startDate) : null;
+                const startDate = task.startDate
+                  ? new Date(task.startDate)
+                  : null;
                 return (
                   <div className="space-y-2">
                     <div className="text-xs font-semibold text-vikunja-700 uppercase tracking-wider mb-2">
@@ -247,7 +249,9 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
                           }`}
                         >
                         </div>
-                        <span className="text-slate-700">Start Date Alignment</span>
+                        <span className="text-slate-700">
+                          Start Date Alignment
+                        </span>
                         {!startDate && (
                           <span className="text-xs text-slate-500">
                             (no start date)
@@ -283,16 +287,18 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
                         >
                         </div>
                         <span className="text-slate-700">Due Date Urgency</span>
-                        {breakdown.dueDateScore === 0 && !breakdown.hasDueDate && (
+                        {breakdown.dueDateScore === 0 &&
+                          !breakdown.hasDueDate && (
                           <span className="text-xs text-slate-500">
                             (no due date)
                           </span>
                         )}
-                        {breakdown.dueDateScore === 0 && breakdown.hasDueDate && (
-                          <span className="text-xs text-slate-500">
-                            (due later)
-                          </span>
-                        )}
+                        {breakdown.dueDateScore === 0 && breakdown.hasDueDate &&
+                          (
+                            <span className="text-xs text-slate-500">
+                              (due later)
+                            </span>
+                          )}
                         {breakdown.dueDateScore === 75 && (
                           <span className="text-xs text-slate-500">
                             (due within 7 days)
