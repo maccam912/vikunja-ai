@@ -38,6 +38,7 @@ interface RawVikunjaTask {
   labels?: Array<{ title?: string } | string>;
   identifier?: string;
   related_tasks?: { [key: string]: TaskRelation[] };
+  relations?: TaskRelation[];
   updated?: string;
 }
 
@@ -94,15 +95,7 @@ export class VikunjaClient {
   }
 
   private formatTask(task: RawVikunjaTask): FormattedTask {
-    // Flatten related_tasks object into a single array
-    const relatedTasks: TaskRelation[] = [];
-    if (task.related_tasks) {
-      for (const relations of Object.values(task.related_tasks)) {
-        if (Array.isArray(relations)) {
-          relatedTasks.push(...relations);
-        }
-      }
-    }
+    const relatedTasks = this.getRelations(task);
 
     return {
       id: task.id,
@@ -124,6 +117,24 @@ export class VikunjaClient {
       updated: task.updated,
       relatedTasks: relatedTasks.length > 0 ? relatedTasks : undefined,
     };
+  }
+
+  private getRelations(task: RawVikunjaTask): TaskRelation[] {
+    const relatedTasks: TaskRelation[] = [];
+
+    if (task.related_tasks) {
+      for (const relations of Object.values(task.related_tasks)) {
+        if (Array.isArray(relations)) {
+          relatedTasks.push(...relations);
+        }
+      }
+    }
+
+    if (Array.isArray(task.relations)) {
+      relatedTasks.push(...task.relations);
+    }
+
+    return relatedTasks;
   }
 
   private async request(
@@ -162,7 +173,39 @@ export class VikunjaClient {
       : (data as { results?: RawVikunjaTask[] }).results || [];
 
     // Transform to frontend format
-    return tasks.map((task) => this.formatTask(task));
+    const formattedTasks = tasks.map((task) => this.formatTask(task));
+
+    // If the list endpoint did not include relations, fetch them individually
+    const tasksWithRelations = await Promise.all(
+      formattedTasks.map(async (task) => {
+        if (task.relatedTasks && task.relatedTasks.length > 0) {
+          return task;
+        }
+
+        try {
+          const detailedTask = await this.request(`/tasks/${task.id}`) as RawVikunjaTask;
+          const relations = this.getRelations(detailedTask);
+
+          if (relations.length === 0) {
+            return task;
+          }
+
+          return {
+            ...task,
+            updated: detailedTask.updated || task.updated,
+            relatedTasks: relations,
+          };
+        } catch (error) {
+          console.error(
+            `[VikunjaClient] Failed to fetch relations for task ${task.id}:`,
+            error,
+          );
+          return task;
+        }
+      }),
+    );
+
+    return tasksWithRelations;
   }
 
   async createTask(
