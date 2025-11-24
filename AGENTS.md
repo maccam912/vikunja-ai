@@ -6,3 +6,8 @@
   `git config core.hooksPath .githooks`) so commits fail if these checks do not
   pass.
 - Do not commit code that fails these checks or CI/CD.
+
+## Reminders
+
+- Deno fmt miss counter: 1 (increment this each time a CI run fails because
+  `deno fmt` was not run before claiming completion).
