@@ -1,15 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Message, Task, VikunjaConfig } from "./types";
-import { TaskCard } from "./components/TaskCard";
-import { Chat } from "./components/Chat";
-import { SettingsModal } from "./components/SettingsModal";
-import { TaskDetailsModal } from "./components/TaskDetailsModal";
-import * as apiClient from "./services/apiClient";
+import { Message, Task, VikunjaConfig } from "./types.ts";
+import { TaskCard } from "./components/TaskCard.tsx";
+import { Chat } from "./components/Chat.tsx";
+import { SettingsModal } from "./components/SettingsModal.tsx";
+import { TaskDetailsModal } from "./components/TaskDetailsModal.tsx";
+import * as apiClient from "./services/apiClient.ts";
 import {
   calculatePriorities,
   getTopPriorityTask,
   sortByPriority,
-} from "./utils/priorityCalculation";
+} from "./utils/priorityCalculation.ts";
 
 const App: React.FC = () => {
   // App State

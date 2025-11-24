@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { VikunjaConfig, VikunjaProject } from "../types";
-import { api } from "../services/vikunjaApi";
+import { VikunjaConfig, VikunjaProject } from "../types.ts";
+import { api } from "../services/vikunjaApi.ts";
 
 const DEFAULT_URL = "https://vikunja.rackspace.koski.co";
 const DEFAULT_TOKEN = "tk_598288a0fb2cc9a123b8ddcef59946b3cc4fae2e";

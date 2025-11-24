@@ -19,5 +19,10 @@
   "compilerOptions": {
     "jsx": "precompile",
     "jsxImportSource": "hono/jsx"
+  },
+  "test": {
+    "exclude": [
+      "frontend/"
+    ]
   }
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Task, TaskPriority, TaskRelationKind } from "../types";
+import { Task, TaskPriority, TaskRelationKind } from "../types.ts";
 
 interface TaskCardProps {
   task: Task;

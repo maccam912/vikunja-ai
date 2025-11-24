@@ -1,4 +1,4 @@
-import { Task, VikunjaConfig, VikunjaProject, VikunjaUser } from "../types";
+import { Task, VikunjaConfig, VikunjaProject, VikunjaUser } from "../types.ts";
 
 type HeadersMap = Record<string, string>;
 
