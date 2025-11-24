@@ -31,6 +31,14 @@ const App: React.FC = () => {
   const [config, setConfig] = useState<VikunjaConfig | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  // Theme
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const storedTheme = localStorage.getItem("theme");
+    return storedTheme === "light" || storedTheme === "dark"
+      ? storedTheme
+      : "dark";
+  });
+
   // Selection State
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
@@ -44,6 +52,12 @@ const App: React.FC = () => {
       setIsSettingsOpen(true);
     }
   }, []);
+
+  // Sync theme with document root
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   // Fetch Data when config changes
   useEffect(() => {
@@ -93,6 +107,10 @@ const App: React.FC = () => {
   const handleSaveConfig = (newConfig: VikunjaConfig) => {
     setConfig(newConfig);
     localStorage.setItem("vikunja_config", JSON.stringify(newConfig));
+  };
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
   // -- Backend AI Integration --
@@ -223,7 +241,7 @@ const App: React.FC = () => {
 
   return (
     // Use h-[100dvh] to solve mobile browser address bar issues
-    <div className="flex flex-col lg:flex-row h-[100dvh] bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-[100dvh] bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans overflow-hidden">
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
@@ -249,7 +267,7 @@ const App: React.FC = () => {
         }`}
       >
         {/* Top Bar */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 flex-shrink-0 z-10">
+        <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 flex-shrink-0 z-10">
           <div className="flex items-center gap-3">
             <div className="bg-vikunja-600 p-1.5 rounded text-white">
               <svg
@@ -266,11 +284,11 @@ const App: React.FC = () => {
                 />
               </svg>
             </div>
-            <h1 className="text-lg font-bold text-slate-800 tracking-tight">
+            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight">
               Vikunja<span className="text-vikunja-500 font-light">AI</span>
             </h1>
             {isRefreshing && (
-              <span className="hidden sm:inline text-xs text-slate-400 animate-pulse ml-2">
+              <span className="hidden sm:inline text-xs text-slate-400 dark:text-slate-300 animate-pulse ml-2">
                 Syncing...
               </span>
             )}
@@ -279,8 +297,45 @@ const App: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               type="button"
+              onClick={toggleTheme}
+              className="p-2 text-slate-400 dark:text-slate-300 hover:text-vikunja-600 dark:hover:text-vikunja-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-all"
+              title="Toggle theme"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M12 3v1.5m0 15V21m9-9h-1.5M4.5 12H3m15.364 6.364-1.06-1.06M7.696 7.696l-1.06-1.06m12.728 0-1.06 1.06M7.696 16.304l-1.06 1.06M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"
+                  />
+                </svg>
+              )}
+            </button>
+            <button
+              type="button"
               onClick={() => setIsSettingsOpen(true)}
-              className="p-2 text-slate-400 hover:text-vikunja-600 hover:bg-vikunja-50 rounded-full transition-all"
+              className="p-2 text-slate-400 dark:text-slate-300 hover:text-vikunja-600 dark:hover:text-vikunja-300 hover:bg-vikunja-50 dark:hover:bg-slate-700 rounded-full transition-all"
               title="Settings"
             >
               <svg
@@ -303,19 +358,18 @@ const App: React.FC = () => {
                 />
               </svg>
             </button>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-vikunja-400 to-purple-500 border-2 border-white shadow-sm">
-            </div>
+            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-vikunja-400 to-purple-500 border-2 border-white dark:border-slate-700 shadow-sm"></div>
           </div>
         </header>
 
         {/* Toolbar */}
         <div className="px-4 lg:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold text-slate-800">My Tasks</h2>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">My Tasks</h2>
             <button
               type="button"
               onClick={refreshData}
-              className="p-1.5 text-slate-400 hover:text-vikunja-600 rounded-lg transition-colors"
+              className="p-1.5 text-slate-400 dark:text-slate-300 hover:text-vikunja-600 dark:hover:text-vikunja-300 rounded-lg transition-colors"
               title="Refresh"
             >
               <svg
@@ -334,14 +388,14 @@ const App: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex items-center bg-white rounded-lg p-1 border border-slate-200 shadow-sm self-start sm:self-auto">
+          <div className="flex items-center bg-white dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-sm self-start sm:self-auto">
             <button
               type="button"
               onClick={() => setFilter("all")}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 filter === "all"
-                  ? "bg-slate-100 text-slate-900"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                  : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-100"
               }`}
             >
               All
@@ -351,8 +405,8 @@ const App: React.FC = () => {
               onClick={() => setFilter("active")}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 filter === "active"
-                  ? "bg-slate-100 text-slate-900"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                  : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-100"
               }`}
             >
               Active
@@ -362,8 +416,8 @@ const App: React.FC = () => {
               onClick={() => setFilter("completed")}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 filter === "completed"
-                  ? "bg-slate-100 text-slate-900"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                  : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-100"
               }`}
             >
               Done
@@ -495,7 +549,7 @@ const App: React.FC = () => {
       */
       }
       <div
-        className={`lg:w-[400px] border-l border-slate-200 bg-white flex-col ${
+        className={`lg:w-[400px] border-l border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex-col ${
           mobileView === "chat"
             ? "flex flex-1 w-full overflow-hidden min-h-0"
             : "hidden lg:flex overflow-hidden min-h-0"
@@ -510,7 +564,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden h-16 bg-white border-t border-slate-200 flex-shrink-0 flex justify-around items-center z-20 pb-[env(safe-area-inset-bottom)]">
+      <div className="lg:hidden h-16 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex-shrink-0 flex justify-around items-center z-20 pb-[env(safe-area-inset-bottom)]">
         <button
           type="button"
           onClick={() => setMobileView("tasks")}

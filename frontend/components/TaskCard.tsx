@@ -11,25 +11,25 @@ const PriorityBadge: React.FC<{ priority: TaskPriority }> = ({ priority }) => {
   switch (priority) {
     case TaskPriority.URGENT:
       return (
-        <span className="px-2 py-0.5 text-xs font-bold bg-red-100 text-red-700 rounded-full">
+        <span className="px-2 py-0.5 text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-200 rounded-full">
           Urgent
         </span>
       );
     case TaskPriority.HIGH:
       return (
-        <span className="px-2 py-0.5 text-xs font-bold bg-orange-100 text-orange-700 rounded-full">
+        <span className="px-2 py-0.5 text-xs font-bold bg-orange-100 dark:bg-amber-900/40 text-orange-700 dark:text-amber-200 rounded-full">
           High
         </span>
       );
     case TaskPriority.MEDIUM:
       return (
-        <span className="px-2 py-0.5 text-xs font-bold bg-blue-100 text-blue-700 rounded-full">
+        <span className="px-2 py-0.5 text-xs font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200 rounded-full">
           Medium
         </span>
       );
     default:
       return (
-        <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 rounded-full">
+        <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 rounded-full">
           Low
         </span>
       );
@@ -67,8 +67,8 @@ export const TaskCard: React.FC<TaskCardProps> = (
   return (
     <div
       onClick={handleCardClick}
-      className={`group flex items-start gap-4 p-4 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-vikunja-200 transition-all duration-200 cursor-pointer ${
-        task.completed ? "opacity-60 bg-slate-50" : ""
+      className={`group flex items-start gap-4 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md hover:border-vikunja-200 dark:hover:border-vikunja-400/50 transition-all duration-200 cursor-pointer ${
+        task.completed ? "opacity-60 bg-slate-50 dark:bg-slate-700" : ""
       }`}
     >
       {/* Checkbox */}
@@ -111,8 +111,8 @@ export const TaskCard: React.FC<TaskCardProps> = (
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <h3
-              className={`text-base font-medium text-slate-900 leading-snug ${
-                task.completed ? "line-through text-slate-500" : ""
+              className={`text-base font-medium text-slate-900 dark:text-slate-100 leading-snug ${
+                task.completed ? "line-through text-slate-500 dark:text-slate-400" : ""
               }`}
             >
               {task.title}
@@ -147,15 +147,15 @@ export const TaskCard: React.FC<TaskCardProps> = (
 
         {task.description && (
           <p
-            className={`mt-1 text-sm text-slate-600 line-clamp-2 ${
-              task.completed ? "line-through text-slate-400" : ""
+            className={`mt-1 text-sm text-slate-600 dark:text-slate-300 line-clamp-2 ${
+              task.completed ? "line-through text-slate-400 dark:text-slate-500" : ""
             }`}
           >
             {stripHtml(task.description)}
           </p>
         )}
 
-        <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-slate-500 dark:text-slate-300">
           {task.dueDate && (
             <div
               className={`flex items-center gap-1 ${
@@ -238,14 +238,14 @@ export const TaskCard: React.FC<TaskCardProps> = (
             {task.tags.map((tag) => (
               <span
                 key={tag}
-                className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600"
+                className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-200"
               >
                 #{tag}
               </span>
             ))}
           </div>
 
-          <span className="ml-auto text-slate-300 text-[10px] font-mono">
+          <span className="ml-auto text-slate-300 dark:text-slate-500 text-[10px] font-mono">
             ID: {task.id}
           </span>
         </div>
