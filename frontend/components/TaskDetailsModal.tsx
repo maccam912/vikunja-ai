@@ -213,6 +213,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
               {/* Priority Breakdown */}
               {(() => {
                 const breakdown = calculatePriorityBreakdown(task, allTasks);
+                const startDate = task.startDate ? new Date(task.startDate) : null;
                 return (
                   <div className="space-y-2">
                     <div className="text-xs font-semibold text-vikunja-700 uppercase tracking-wider mb-2">
@@ -233,6 +234,43 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
                       </span>
                     </div>
 
+                    {/* Start Date Score */}
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            breakdown.startDateScore !== 0
+                              ? breakdown.startDateScore > 0
+                                ? "bg-emerald-500"
+                                : "bg-purple-500"
+                              : "bg-slate-300"
+                          }`}
+                        >
+                        </div>
+                        <span className="text-slate-700">Start Date Alignment</span>
+                        {!startDate && (
+                          <span className="text-xs text-slate-500">
+                            (no start date)
+                          </span>
+                        )}
+                        {startDate && breakdown.startDateScore > 0 && (
+                          <span className="text-xs text-emerald-600 font-medium">
+                            (already started)
+                          </span>
+                        )}
+                        {startDate && breakdown.startDateScore < 0 && (
+                          <span className="text-xs text-purple-600 font-medium">
+                            (starts later)
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-mono font-semibold text-slate-900">
+                        {breakdown.startDateScore > 0
+                          ? `+${breakdown.startDateScore}`
+                          : breakdown.startDateScore}
+                      </span>
+                    </div>
+
                     {/* Due Date Score */}
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
@@ -245,9 +283,14 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = (
                         >
                         </div>
                         <span className="text-slate-700">Due Date Urgency</span>
-                        {breakdown.dueDateScore === 0 && (
+                        {breakdown.dueDateScore === 0 && !breakdown.hasDueDate && (
                           <span className="text-xs text-slate-500">
                             (no due date)
+                          </span>
+                        )}
+                        {breakdown.dueDateScore === 0 && breakdown.hasDueDate && (
+                          <span className="text-xs text-slate-500">
+                            (due later)
                           </span>
                         )}
                         {breakdown.dueDateScore === 75 && (
