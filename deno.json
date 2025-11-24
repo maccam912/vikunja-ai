@@ -16,6 +16,7 @@
     "start": "deno run --allow-net --allow-env --allow-read --allow-run --env-file=.env backend/main.ts",
     "build:frontend": "cd frontend && npm install && npm run build"
   },
+  "exclude": ["frontend", "node_modules"],
   "compilerOptions": {
     "jsx": "precompile",
     "jsxImportSource": "hono/jsx"
