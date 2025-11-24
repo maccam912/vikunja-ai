@@ -183,7 +183,9 @@ export class VikunjaClient {
         }
 
         try {
-          const detailedTask = await this.request(`/tasks/${task.id}`) as RawVikunjaTask;
+          const detailedTask = await this.request(
+            `/tasks/${task.id}`,
+          ) as RawVikunjaTask;
           const relations = this.getRelations(detailedTask);
 
           if (relations.length === 0) {
