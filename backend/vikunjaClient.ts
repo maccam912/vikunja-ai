@@ -9,6 +9,7 @@ export interface VikunjaTask {
   done: boolean;
   priority: number;
   due_date?: string | null;
+  start_date?: string | null;
   created: string;
   updated: string;
 }
@@ -32,6 +33,7 @@ interface RawVikunjaTask {
   done?: boolean;
   priority?: number;
   due_date?: string | null;
+  start_date?: string | null;
   assignees?: Array<{ username?: string }>;
   labels?: Array<{ title?: string } | string>;
   identifier?: string;
@@ -46,6 +48,7 @@ interface FormattedTask {
   completed: boolean;
   priority: number;
   dueDate?: string | null;
+  startDate?: string | null;
   assignee?: string;
   tags: string[];
   identifier?: string;
@@ -110,6 +113,9 @@ export class VikunjaClient {
       dueDate: task.due_date && !task.due_date.startsWith("0001-01-01")
         ? task.due_date
         : undefined,
+      startDate: task.start_date && !task.start_date.startsWith("0001-01-01")
+        ? task.start_date
+        : undefined,
       assignee: task.assignees?.[0]?.username || undefined,
       tags: (task.labels || []).map((label) =>
         typeof label === "string" ? label : label.title || String(label)
@@ -166,12 +172,14 @@ export class VikunjaClient {
       description?: string;
       priority?: number;
       due_date?: string | null;
+      start_date?: string | null;
     },
   ): Promise<VikunjaTask> {
     // Ensure due_date has timezone suffix (preserves null for clearing)
     const taskWithTimezone = {
       ...task,
       due_date: this.ensureTimezone(task.due_date),
+      start_date: this.ensureTimezone(task.start_date),
     };
 
     return (await this.request(`/projects/${projectId}/tasks`, {
@@ -188,6 +196,7 @@ export class VikunjaClient {
     const updatesWithTimezone = {
       ...updates,
       due_date: this.ensureTimezone(updates.due_date),
+      start_date: this.ensureTimezone(updates.start_date),
     };
 
     const updated = (await this.request(`/tasks/${taskId}`, {

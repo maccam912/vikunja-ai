@@ -9,6 +9,7 @@ interface RawVikunjaTask {
   done: boolean;
   priority?: number;
   due_date?: string;
+  start_date?: string;
   assignees?: Array<{ username?: string; name?: string }>;
   labels?: Array<{ title: string }>;
   identifier?: string;
@@ -125,12 +126,21 @@ const mapToLocalTask = (vTask: RawVikunjaTask): Task => {
   // Vikunja often returns "0001-01-01T00:00:00Z" for null dates.
   // We must strictly filter these out.
   let validDueDate: string | undefined = undefined;
+  let validStartDate: string | undefined = undefined;
 
   if (vTask.due_date) {
     const isZeroDate = vTask.due_date.startsWith("0001-01-01") ||
       vTask.due_date.startsWith("1970-01-01");
     if (!isZeroDate) {
       validDueDate = vTask.due_date;
+    }
+  }
+
+  if (vTask.start_date) {
+    const isZeroDate = vTask.start_date.startsWith("0001-01-01") ||
+      vTask.start_date.startsWith("1970-01-01");
+    if (!isZeroDate) {
+      validStartDate = vTask.start_date;
     }
   }
 
@@ -141,6 +151,7 @@ const mapToLocalTask = (vTask: RawVikunjaTask): Task => {
     completed: vTask.done,
     priority: vTask.priority || 1,
     dueDate: validDueDate,
+    startDate: validStartDate,
     assignee: vTask.assignees?.[0]?.username || vTask.assignees?.[0]?.name,
     tags: (vTask.labels || []).map((l) => l.title),
     identifier: vTask.identifier,
@@ -193,6 +204,7 @@ export const api = {
       description: task.description,
       priority: task.priority,
       due_date: task.dueDate,
+      start_date: task.startDate,
     };
 
     // Handle Assignment during creation
@@ -228,6 +240,7 @@ export const api = {
     if (task.completed !== undefined) payload.done = task.completed;
     if (task.priority !== undefined) payload.priority = task.priority;
     if (task.dueDate !== undefined) payload.due_date = task.dueDate;
+    if (task.startDate !== undefined) payload.start_date = task.startDate;
 
     // Handle Assignment
     if (task.assignee) {

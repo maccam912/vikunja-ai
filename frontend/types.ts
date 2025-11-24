@@ -45,6 +45,7 @@ export interface Task {
   completed: boolean; // Mapped from 'done'
   priority: TaskPriority;
   dueDate?: string; // ISO string
+  startDate?: string; // ISO string
   assignee?: string; // Derived from assignees list for display
   tags: string[]; // Mapped from labels
   identifier?: string; // Vikunja identifier (e.g. "TASK-1")

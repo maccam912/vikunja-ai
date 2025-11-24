@@ -13,35 +13,64 @@ const PRIORITY_WEIGHTS = {
   DUE_DATE_SOON: 150, // Additional points for tasks due within 3 days
   DUE_DATE_THIS_WEEK: 75, // Additional points for tasks due within 7 days
   DUE_DATE_OVERDUE: 500, // Additional points for overdue tasks
+  START_DATE_PAST_BONUS: 50, // Additional points if the start date is in the past
+  START_DATE_FUTURE_PENALTY: 50, // Penalty if the start date is in the future
   BLOCKED_PENALTY: 0.01, // Multiplier for blocked tasks (nearly zero priority)
 };
 
 /**
- * Get the due date urgency score
+ * Evaluate due date presence + urgency
  */
-function getDueDateScore(dueDate?: string): number {
-  if (!dueDate) return 0;
+function evaluateDueDate(
+  dueDate?: string,
+): { score: number; hasDueDate: boolean } {
+  if (!dueDate) return { score: 0, hasDueDate: false };
 
   const now = new Date();
   const due = new Date(dueDate);
+  const isValid = !Number.isNaN(due.getTime());
+
+  // If the API served an unparsable date, treat it as missing
+  if (!isValid) return { score: 0, hasDueDate: false };
+
   const diffMs = due.getTime() - now.getTime();
   const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
   if (diffDays < 0) {
     // Overdue
-    return PRIORITY_WEIGHTS.DUE_DATE_OVERDUE;
+    return { score: PRIORITY_WEIGHTS.DUE_DATE_OVERDUE, hasDueDate: true };
   } else if (diffDays < 1) {
     // Due within 24 hours
-    return PRIORITY_WEIGHTS.DUE_DATE_URGENT;
+    return { score: PRIORITY_WEIGHTS.DUE_DATE_URGENT, hasDueDate: true };
   } else if (diffDays < 3) {
     // Due within 3 days
-    return PRIORITY_WEIGHTS.DUE_DATE_SOON;
+    return { score: PRIORITY_WEIGHTS.DUE_DATE_SOON, hasDueDate: true };
   } else if (diffDays < 7) {
     // Due within a week
-    return PRIORITY_WEIGHTS.DUE_DATE_THIS_WEEK;
+    return { score: PRIORITY_WEIGHTS.DUE_DATE_THIS_WEEK, hasDueDate: true };
   }
 
-  return 0;
+  return { score: 0, hasDueDate: true };
+}
+
+/**
+ * Start date modifier
+ * - Future start dates lower the score compared to no start date
+ * - Past start dates raise the score compared to no start date
+ */
+function getStartDateScore(startDate?: string): number {
+  if (!startDate) return 0;
+
+  const now = new Date();
+  const start = new Date(startDate);
+
+  if (Number.isNaN(start.getTime())) return 0;
+
+  if (start.getTime() > now.getTime()) {
+    return -PRIORITY_WEIGHTS.START_DATE_FUTURE_PENALTY;
+  }
+
+  return PRIORITY_WEIGHTS.START_DATE_PAST_BONUS;
 }
 
 /**
@@ -114,7 +143,10 @@ function calculateTaskPriority(
   let score = task.priority * PRIORITY_WEIGHTS.BASE_PRIORITY;
 
   // Add due date urgency
-  score += getDueDateScore(task.dueDate);
+  score += evaluateDueDate(task.dueDate).score;
+
+  // Start date adjustments
+  score += getStartDateScore(task.startDate);
 
   // Check if this task is blocked by incomplete tasks
   const blocked = isTaskBlocked(task, allTasks);
@@ -148,6 +180,8 @@ function calculateTaskPriority(
 export interface PriorityBreakdown {
   baseScore: number;
   dueDateScore: number;
+  hasDueDate: boolean;
+  startDateScore: number;
   blockingBonus: number;
   isBlocked: boolean;
   totalBeforeBlocked: number;
@@ -166,6 +200,8 @@ export function calculatePriorityBreakdown(
     return {
       baseScore: 0,
       dueDateScore: 0,
+      hasDueDate: false,
+      startDateScore: 0,
       blockingBonus: 0,
       isBlocked: false,
       totalBeforeBlocked: 0,
@@ -177,7 +213,10 @@ export function calculatePriorityBreakdown(
   const baseScore = task.priority * PRIORITY_WEIGHTS.BASE_PRIORITY;
 
   // Add due date urgency
-  const dueDateScore = getDueDateScore(task.dueDate);
+  const { score: dueDateScore, hasDueDate } = evaluateDueDate(task.dueDate);
+
+  // Start date adjustment
+  const startDateScore = getStartDateScore(task.startDate);
 
   // Check if this task is blocked by incomplete tasks
   const isBlocked = isTaskBlocked(task, allTasks);
@@ -200,7 +239,8 @@ export function calculatePriorityBreakdown(
     }
   }
 
-  const totalBeforeBlocked = baseScore + dueDateScore + blockingBonus;
+  const totalBeforeBlocked =
+    baseScore + dueDateScore + startDateScore + blockingBonus;
   const finalScore = isBlocked
     ? totalBeforeBlocked * PRIORITY_WEIGHTS.BLOCKED_PENALTY
     : totalBeforeBlocked;
@@ -208,6 +248,8 @@ export function calculatePriorityBreakdown(
   return {
     baseScore,
     dueDateScore,
+    hasDueDate,
+    startDateScore,
     blockingBonus,
     isBlocked,
     totalBeforeBlocked,
