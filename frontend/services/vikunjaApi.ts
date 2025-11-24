@@ -1,4 +1,10 @@
-import { Task, VikunjaConfig, VikunjaProject, VikunjaUser } from "../types";
+import {
+  Task,
+  TaskRelation,
+  VikunjaConfig,
+  VikunjaProject,
+  VikunjaUser,
+} from "../types";
 
 type HeadersMap = Record<string, string>;
 
@@ -13,6 +19,8 @@ interface RawVikunjaTask {
   assignees?: Array<{ username?: string; name?: string }>;
   labels?: Array<{ title: string }>;
   identifier?: string;
+  related_tasks?: TaskRelation[] | Record<string, TaskRelation[]>;
+  relations?: TaskRelation[];
 }
 
 // Helper to clean URL and ensure it doesn't end with slash or /api/v1
@@ -144,6 +152,24 @@ const mapToLocalTask = (vTask: RawVikunjaTask): Task => {
     }
   }
 
+  const relatedTasks: TaskRelation[] = [];
+
+  if (vTask.related_tasks) {
+    if (Array.isArray(vTask.related_tasks)) {
+      relatedTasks.push(...vTask.related_tasks);
+    } else {
+      for (const relations of Object.values(vTask.related_tasks)) {
+        if (Array.isArray(relations)) {
+          relatedTasks.push(...relations);
+        }
+      }
+    }
+  }
+
+  if (Array.isArray(vTask.relations)) {
+    relatedTasks.push(...vTask.relations);
+  }
+
   return {
     id: vTask.id,
     title: vTask.title,
@@ -155,6 +181,7 @@ const mapToLocalTask = (vTask: RawVikunjaTask): Task => {
     assignee: vTask.assignees?.[0]?.username || vTask.assignees?.[0]?.name,
     tags: (vTask.labels || []).map((l) => l.title),
     identifier: vTask.identifier,
+    relatedTasks: relatedTasks.length > 0 ? relatedTasks : undefined,
   };
 };
 
