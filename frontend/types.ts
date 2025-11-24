@@ -52,6 +52,7 @@ export interface Task {
   updated?: string;
   relatedTasks?: TaskRelation[]; // All task relations
   calculatedPriority?: number; // Custom calculated priority score
+  webUrl?: string; // Direct link to the task in Vikunja
 }
 
 export interface Message {

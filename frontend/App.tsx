@@ -10,6 +10,7 @@ import {
   getTopPriorityTask,
   sortByPriority,
 } from "./utils/priorityCalculation";
+import { buildTaskLink } from "./utils/vikunjaUrl";
 
 const App: React.FC = () => {
   // App State
@@ -61,8 +62,16 @@ const App: React.FC = () => {
         config.token,
         config.defaultProjectId,
       );
+      const tasksWithLinks = fetchedTasks.map((task) => ({
+        ...task,
+        webUrl: buildTaskLink(
+          config.url,
+          config.defaultProjectId,
+          task.id,
+        ),
+      }));
       // Calculate custom priorities for all tasks
-      const tasksWithPriorities = calculatePriorities(fetchedTasks);
+      const tasksWithPriorities = calculatePriorities(tasksWithLinks);
       setTasks(tasksWithPriorities);
     } catch (error) {
       console.error("Failed to fetch Vikunja data:", error);
